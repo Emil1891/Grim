@@ -63,16 +63,6 @@ public:
 	/** Getter for the bool */
 	UFUNCTION(BlueprintCallable, Category = Weapon)
 	bool GetHasRifle();
-	
-	UFUNCTION(BlueprintCallable, Category = Respawn)
-    void Respawn();
-    
-	UFUNCTION(BlueprintImplementableEvent)
-	void RespawnTrigger();
-
-private:
-	UPROPERTY()
-	FVector SpawnLocation;
 
 protected:
 	/** Called for movement input */

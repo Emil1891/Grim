@@ -7,7 +7,6 @@
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "Kismet/GameplayStatics.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -51,7 +50,7 @@ void AGrimCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-	SpawnLocation = GetActorLocation();
+
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -108,12 +107,4 @@ void AGrimCharacter::SetHasRifle(bool bNewHasRifle)
 bool AGrimCharacter::GetHasRifle()
 {
 	return bHasRifle;
-}
-
-void AGrimCharacter::Respawn()
-{
-	//SetActorLocation(SpawnLocation);
-	//UGameplayStatics::OpenLevel(this, FName("FirstPersonMap"));
-	DisableInput(Cast<APlayerController>(GetController()));
-	RespawnTrigger();
 }
