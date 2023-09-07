@@ -84,7 +84,6 @@ void AGrimCharacter::Move(const FInputActionValue& Value)
 		// add movement 
 		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
 		AddMovementInput(GetActorRightVector(), MovementVector.X);
-		MoveTrigger();
 	}
 }
 
