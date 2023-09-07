@@ -63,6 +63,30 @@ public:
 	/** Getter for the bool */
 	UFUNCTION(BlueprintCallable, Category = Weapon)
 	bool GetHasRifle();
+	
+	UFUNCTION(BlueprintCallable, Category = Respawn)
+    void Respawn();
+    
+	UFUNCTION(BlueprintImplementableEvent)
+	void RespawnTrigger();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void CollideTrigger(FName TagName);
+
+	virtual void NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit) override;
+
+private:
+	UPROPERTY()
+	FVector SpawnLocation;
+
+	UPROPERTY(EditAnywhere)
+	TArray<FName> TagsToCheck {
+		FName("Wall"),
+		FName("Obstacle"),
+	};
+
+	UPROPERTY(VisibleAnywhere)
+	bool bIsHit;
 
 protected:
 	/** Called for movement input */
