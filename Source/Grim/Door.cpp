@@ -9,6 +9,8 @@ ADoor::ADoor()
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DoorMesh"));
 	RootComponent = Mesh;
 
+	TriggerZone->SetupAttachment(RootComponent); 
+
 }
 
 void ADoor::InteractSuccessful()
@@ -22,4 +24,10 @@ void ADoor::InteractSuccessful()
 		UGameplayStatics::PlaySoundAtLocation(this, DoorOpenSound, GetActorLocation()); 
 	
 	Mesh->DestroyComponent();
+}
+
+void ADoor::BeginPlay()
+{
+	Super::BeginPlay();
+	
 }
