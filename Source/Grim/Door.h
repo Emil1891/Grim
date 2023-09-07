@@ -23,10 +23,10 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* Mesh;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	USoundBase* DoorOpenSound = nullptr; 
 	
 };

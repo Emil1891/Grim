@@ -32,7 +32,7 @@ protected:
 	* for more specific behaviour. Just be sure to still call parent function so event is fired */ 
 	virtual void InteractSuccessful();
 	
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* TriggerZone;
 	
 public:	
@@ -59,11 +59,11 @@ private:
 	bool bPlayerIsInZone = false;
 
 	// Sound to play when the player enters the trigger zone and can interact 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	USoundBase* InteractEnterSound = nullptr;
 
 	// Sound to play when player exits the trigger zone and can no longer interact 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	USoundBase* InteractExitSound = nullptr; 
 
 };
