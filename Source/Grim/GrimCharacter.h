@@ -80,7 +80,10 @@ private:
 	FVector SpawnLocation;
 
 	UPROPERTY(EditAnywhere)
-	TArray<FName> TagsToCheck;
+	TArray<FName> TagsToCheck {
+		FName("Wall"),
+		FName("Obstacle"),
+	};
 
 	UPROPERTY(VisibleAnywhere)
 	bool bIsHit;
