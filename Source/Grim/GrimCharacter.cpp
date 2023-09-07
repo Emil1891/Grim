@@ -7,6 +7,7 @@
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Kismet/GameplayStatics.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -50,7 +51,7 @@ void AGrimCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-
+	SpawnLocation = GetActorLocation();
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -83,6 +84,7 @@ void AGrimCharacter::Move(const FInputActionValue& Value)
 		// add movement 
 		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
 		AddMovementInput(GetActorRightVector(), MovementVector.X);
+		MoveTrigger();
 	}
 }
 
@@ -95,7 +97,7 @@ void AGrimCharacter::Look(const FInputActionValue& Value)
 	{
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+		//AddControllerPitchInput(LookAxisVector.Y);
 	}
 }
 
@@ -107,4 +109,48 @@ void AGrimCharacter::SetHasRifle(bool bNewHasRifle)
 bool AGrimCharacter::GetHasRifle()
 {
 	return bHasRifle;
+}
+
+void AGrimCharacter::Respawn()
+{
+	//SetActorLocation(SpawnLocation);
+	
+	FTimerHandle DelayHandle;
+	FTimerDelegate DelayDelegate;
+	DelayDelegate.BindLambda([this] {
+		UGameplayStatics::OpenLevel(this, FName(UGameplayStatics::GetCurrentLevelName(this)));
+	});
+	
+	DisableInput(Cast<APlayerController>(GetController()));
+	RespawnTrigger();
+	GetWorldTimerManager().SetTimer(DelayHandle, DelayDelegate, 2.f, false);
+}
+
+void AGrimCharacter::NotifyHit(
+	UPrimitiveComponent* MyComp,
+	AActor* Other,
+	UPrimitiveComponent* OtherComp,
+	bool bSelfMoved,
+	FVector HitLocation,
+	FVector HitNormal,
+	FVector NormalImpulse,
+	const FHitResult& Hit
+) {
+	if( bIsHit ) return;
+
+	FTimerHandle DelayHandle;
+	FTimerDelegate DelayDelegate;
+	DelayDelegate.BindLambda([this] {
+		bIsHit = false;
+	});
+	
+	for( auto Tag : TagsToCheck )
+	{
+		if( Other->ActorHasTag(Tag) )
+		{
+			CollideTrigger(Tag);
+			bIsHit = true;
+			GetWorldTimerManager().SetTimer(DelayHandle, DelayDelegate, 1.f, false);
+		}
+	}
 }
