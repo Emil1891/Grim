@@ -20,6 +20,8 @@ public:
 protected:
 	virtual void InteractSuccessful() override;
 
+	virtual void BeginPlay() override;
+
 private:
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* Mesh;

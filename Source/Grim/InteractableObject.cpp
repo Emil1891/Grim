@@ -12,7 +12,7 @@ AInteractableObject::AInteractableObject()
 	PrimaryActorTick.bCanEverTick = false; // no need to tick as of now 
 
 	TriggerZone = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("TriggerZone"));
-	TriggerZone->SetupAttachment(RootComponent);
+	TriggerZone->SetupAttachment(RootComponent); 
 
 	// bind functions for when player enters/exits the trigger zone
 	TriggerZone->OnComponentBeginOverlap.AddDynamic(this, &AInteractableObject::TriggerZoneEntered);
