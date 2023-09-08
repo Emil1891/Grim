@@ -64,6 +64,6 @@ private:
 
 	// Sound to play when player exits the trigger zone and can no longer interact 
 	UPROPERTY(EditAnywhere)
-	USoundBase* InteractExitSound = nullptr; 
+	USoundBase* InteractExitSound = nullptr;
 
 };
