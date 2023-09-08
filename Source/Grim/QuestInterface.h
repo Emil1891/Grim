@@ -1,14 +1,13 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "QuestCompleteInterface.generated.h"
+#include "QuestInterface.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UQuestCompleteInterface : public UInterface
+class UQuestInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -16,7 +15,7 @@ class UQuestCompleteInterface : public UInterface
 /**
  * 
  */
-class GRIM_API IQuestCompleteInterface
+class GRIM_API IQuestInterface
 {
 	GENERATED_BODY()
 
