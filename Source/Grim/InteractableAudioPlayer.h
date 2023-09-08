@@ -17,14 +17,15 @@ class GRIM_API AInteractableAudioPlayer : public AInteractableObject
 public:
 	AInteractableAudioPlayer();
 
+protected:
 	virtual void InteractSuccessful() override;
 	
-private:
-
 	// Audio component playing the sound 
 	UPROPERTY(EditAnywhere)
-	UAudioComponent* AudioPlayer; 
-
+	UAudioComponent* AudioPlayer;
+	
+private:
+	
 	// mesh shown in level/colliding with player 
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* Mesh; 
