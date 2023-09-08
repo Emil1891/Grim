@@ -2,12 +2,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "QuestCompleteInterface.h"
+#include "QuestInterface.h"
 #include "GameFramework/Actor.h"
 #include "QuestDoor.generated.h"
 
 UCLASS()
-class GRIM_API AQuestDoor : public AActor, public IQuestCompleteInterface
+class GRIM_API AQuestDoor : public AActor, public IQuestInterface
 {
 	GENERATED_BODY()
 	
