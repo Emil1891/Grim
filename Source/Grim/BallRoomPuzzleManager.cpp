@@ -31,7 +31,10 @@ void ABallRoomPuzzleManager::PlayerInteractedWithInstrument(AInteractableAudioPl
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Puzzle Complete"))
 			bPuzzleComplete = true; 
-			QuestDoor->QuestCompleted(); 
+			if(QuestDoor)
+			    QuestDoor->QuestCompleted(); 
+			else
+				UE_LOG(LogTemp, Error, TEXT("No quest door is assigned to open upon puzzle complete"))
 		} else
 			ResetPuzzle();
 	}
