@@ -39,6 +39,8 @@ class AGrimCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputAction* MoveAction;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	class UInputAction* RepeatInstructionAction;
 	
 public:
 	AGrimCharacter();
@@ -75,6 +77,9 @@ public:
 
 	virtual void NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit) override;
 
+	UFUNCTION(BlueprintCallable)
+	void SetCurrentAudioInstructions(USoundBase* NewAudioInstructions);
+
 private:
 	UPROPERTY()
 	FVector SpawnLocation;
@@ -87,6 +92,12 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	bool bIsHit;
+
+	UFUNCTION(BlueprintCallable)
+	void RepeatInstructions();
+
+	UPROPERTY(EditDefaultsOnly)
+	USoundBase* CurrentAudioInstructions;
 
 protected:
 	/** Called for movement input */

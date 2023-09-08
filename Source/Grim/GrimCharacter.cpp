@@ -70,18 +70,30 @@ void AGrimCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInpu
 
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGrimCharacter::Look);
+		
+		EnhancedInputComponent->BindAction(RepeatInstructionAction, ETriggerEvent::Triggered, this, &AGrimCharacter::RepeatInstructions);
 	}
 }
 
+void AGrimCharacter::RepeatInstructions()
+{
+	if( CurrentAudioInstructions )
+	{
+		UGameplayStatics::PlaySound2D(this, CurrentAudioInstructions);
+	}
+}
+
+void AGrimCharacter::SetCurrentAudioInstructions(USoundBase* NewAudioInstructions)
+{
+	CurrentAudioInstructions = NewAudioInstructions;
+}
 
 void AGrimCharacter::Move(const FInputActionValue& Value)
 {
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
+	const FVector2D MovementVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
 	{
-		// add movement 
 		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
 		AddMovementInput(GetActorRightVector(), MovementVector.X);
 	}
@@ -90,7 +102,7 @@ void AGrimCharacter::Move(const FInputActionValue& Value)
 void AGrimCharacter::Look(const FInputActionValue& Value)
 {
 	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+	const FVector2D LookAxisVector = Value.Get<FVector2D>();
 
 	if (Controller != nullptr)
 	{
