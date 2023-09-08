@@ -28,7 +28,9 @@ private:
 
 	TArray<AInteractableAudioPlayer*> PlayerInputOrder;
 
-	// AQuestDoor QuestDoor; // Ska kallas vid quest complete
+	// Door to open upon quest complete 
+	UPROPERTY(EditAnywhere)
+	class AQuestDoor* QuestDoor; 
 
 	// Rests puzzle upon failure 
 	void ResetPuzzle();

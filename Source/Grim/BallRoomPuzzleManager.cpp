@@ -4,6 +4,7 @@
 #include "BallRoomPuzzleManager.h"
 
 #include "BallRoomInstrument.h"
+#include "QuestDoor.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -16,6 +17,9 @@ ABallRoomPuzzleManager::ABallRoomPuzzleManager()
 
 void ABallRoomPuzzleManager::PlayerInteractedWithInstrument(AInteractableAudioPlayer* Instrument)
 {
+	if(bPuzzleComplete)
+		return; 
+	
 	// adds the instrument to the array if it does not already exist 
 	PlayerInputOrder.AddUnique(Instrument);
 
@@ -27,7 +31,7 @@ void ABallRoomPuzzleManager::PlayerInteractedWithInstrument(AInteractableAudioPl
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Puzzle Complete"))
 			bPuzzleComplete = true; 
-			// Call Quest door complete 
+			QuestDoor->QuestCompleted(); 
 		} else
 			ResetPuzzle();
 	}
