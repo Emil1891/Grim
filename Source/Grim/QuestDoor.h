@@ -1,0 +1,32 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+#pragma once
+
+#include "CoreMinimal.h"
+#include "QuestCompleteInterface.h"
+#include "GameFramework/Actor.h"
+#include "QuestDoor.generated.h"
+
+UCLASS()
+class GRIM_API AQuestDoor : public AActor, public IQuestCompleteInterface
+{
+	GENERATED_BODY()
+	
+public:	
+	AQuestDoor();
+
+protected:
+	virtual void BeginPlay() override;
+
+public:	
+	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(BlueprintCallable)
+	virtual void QuestCompleted() override;
+	
+private:
+	UPROPERTY(EditAnywhere)
+	UStaticMeshComponent* Mesh;
+
+	UPROPERTY(EditAnywhere)
+	USoundBase* DoorOpenSound = nullptr; 
+};
