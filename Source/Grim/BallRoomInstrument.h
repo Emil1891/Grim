@@ -31,6 +31,10 @@ private:
 	USoundBase* ActiveSound;
 
 	UPROPERTY(EditAnywhere)
-	class ABallRoomPuzzleManager* PuzzleManager; 
+	class ABallRoomPuzzleManager* PuzzleManager;
+
+	// The audio player that houses the active sound 
+	UPROPERTY(EditAnywhere)
+	UAudioComponent* ActiveAudioPlayer; 
 	
 };
