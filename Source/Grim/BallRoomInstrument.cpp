@@ -16,7 +16,10 @@ void ABallRoomInstrument::BeginPlay()
 
 	// create the active audio player, start playing it but turn volume off.
 	// playing all audio from the start and only adjusting the volume ensures perfect sync 
-	ActiveAudioPlayer = CreateDefaultSubobject<UAudioComponent>(TEXT("ActiveAudioPlayer"));
+	// ActiveAudioPlayer = CreateDefaultSubobject<UAudioComponent>(TEXT("ActiveAudioPlayer"));
+	// ActiveAudioPlayer->SetupAttachment(RootComponent);
+
+	ActiveAudioPlayer = Cast<UAudioComponent>(GetComponentsByTag(UAudioComponent::StaticClass(), FName("ActiveAudioPlayer"))[0]);  
 	ActiveAudioPlayer->Play();
 	ActiveAudioPlayer->VolumeMultiplier = 0; 
 	
