@@ -18,28 +18,32 @@ AMovingSawblade::AMovingSawblade()
 void AMovingSawblade::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	SetActorLocation(Positions[0]);
+
+	if( Positions.Num() > 0 ) {
+		SetActorLocation(Positions[0]);
+	}
 }
 
 // Called every frame
 void AMovingSawblade::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	FVector Movement = FMath::Lerp(GetActorLocation(), Positions[TargetPosition],  LerpSpeed);
+	if( Positions.Num() > 0 ) {
+		FVector Movement = FMath::Lerp(GetActorLocation(), Positions[TargetPosition],  LerpSpeed);
 	
-	SetActorLocation(Movement);
-	//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, TEXT("Swapping target pos."));
-	if( UE::Geometry::Distance(GetActorLocation(), Positions[TargetPosition]) < 5.f )
-	{
+		SetActorLocation(Movement);
 		//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, TEXT("Swapping target pos."));
-		if( TargetPosition == Positions.Num() - 1 )
+		if( UE::Geometry::Distance(GetActorLocation(), Positions[TargetPosition]) < 5.f )
 		{
-			TargetPosition = 0;
-		}
-		else
-		{
-			TargetPosition++;
+			//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, TEXT("Swapping target pos."));
+			if( TargetPosition == Positions.Num() - 1 )
+			{
+				TargetPosition = 0;
+			}
+			else
+			{
+				TargetPosition++;
+			}
 		}
 	}
 }
