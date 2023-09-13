@@ -21,7 +21,7 @@ protected:
 	virtual void InteractSuccessful() override;
 	
 	// Audio component playing the sound 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UAudioComponent* AudioPlayer;
 	
 private:

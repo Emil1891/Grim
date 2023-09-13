@@ -35,6 +35,6 @@ private:
 
 	// The audio player that houses the active sound 
 	UPROPERTY(EditAnywhere)
-	UAudioComponent* ActiveAudioPlayer; 
+	UAudioComponent* ActiveAudioPlayer;
 	
 };

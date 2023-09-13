@@ -14,14 +14,10 @@ void ABallRoomInstrument::BeginPlay()
 	AudioPlayer->SetSound(IdleSound);
 	AudioPlayer->Play();
 
-	// create the active audio player, start playing it but turn volume off.
-	// playing all audio from the start and only adjusting the volume ensures perfect sync 
-	// ActiveAudioPlayer = CreateDefaultSubobject<UAudioComponent>(TEXT("ActiveAudioPlayer"));
-	// ActiveAudioPlayer->SetupAttachment(RootComponent);
-
-	ActiveAudioPlayer = Cast<UAudioComponent>(GetComponentsByTag(UAudioComponent::StaticClass(), FName("ActiveAudioPlayer"))[0]);  
+	ActiveAudioPlayer = Cast<UAudioComponent>(GetComponentsByTag(UAudioComponent::StaticClass(), FName("ActiveAudioPlayer"))[0]);
+	ActiveAudioPlayer->SetSound(ActiveSound); 
+	ActiveAudioPlayer->VolumeMultiplier = 0;
 	ActiveAudioPlayer->Play();
-	ActiveAudioPlayer->VolumeMultiplier = 0; 
 	
 	// Puzzle manager assigns itself if it is not already set 
 	if(!PuzzleManager)
@@ -36,8 +32,8 @@ void ABallRoomInstrument::ChangeToIdleSound()
 	// AudioPlayer->SetSound(IdleSound);
 
 	// Turns on idle sound and turns off active sound by adjusting volume to keep everything in sync 
-	AudioPlayer->VolumeMultiplier = 1;
-	ActiveAudioPlayer->VolumeMultiplier = 0; 
+	AudioPlayer->SetVolumeMultiplier(1);
+	ActiveAudioPlayer->SetVolumeMultiplier(0); 
 }
 
 void ABallRoomInstrument::InteractSuccessful()
@@ -47,13 +43,9 @@ void ABallRoomInstrument::InteractSuccessful()
 		return;
 	
 	Super::InteractSuccessful();
-	
-	//AudioPlayer->SetSound(ActiveSound);
 
-	// change volume on both audio players, turning on the active one 
-	// only adjusting the volume will keep the various audio in sync 
-	AudioPlayer->VolumeMultiplier = 0;
-	ActiveAudioPlayer->VolumeMultiplier = 1; 
+	AudioPlayer->SetVolumeMultiplier(0);
+	ActiveAudioPlayer->SetVolumeMultiplier(1);
 	
 	PuzzleManager->PlayerInteractedWithInstrument(this);
 }
