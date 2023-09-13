@@ -28,5 +28,8 @@ private:
 	UStaticMeshComponent* Mesh;
 
 	UPROPERTY(EditAnywhere)
-	USoundBase* DoorOpenSound = nullptr; 
+	USoundBase* DoorOpenSound = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	USoundBase* SignallingSound = nullptr; 
 };

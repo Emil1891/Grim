@@ -30,5 +30,8 @@ void AQuestDoor::QuestCompleted()
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, DoorOpenSound, GetActorLocation());
 	}
+	if(SignallingSound)
+		UGameplayStatics::PlaySoundAtLocation(this, SignallingSound, GetActorLocation());
+
 	Mesh->DestroyComponent();
 }
