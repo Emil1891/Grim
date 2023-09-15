@@ -14,6 +14,8 @@ void ABallRoomInstrument::BeginPlay()
 	AudioPlayer->SetSound(IdleSound);
 	AudioPlayer->Play();
 
+	// Unreal moment where component would not show up if created in C++, workaround below where component is created
+	// in the BP and then found here 
 	ActiveAudioPlayer = Cast<UAudioComponent>(GetComponentsByTag(UAudioComponent::StaticClass(), FName("ActiveAudioPlayer"))[0]);
 	ActiveAudioPlayer->SetSound(ActiveSound); 
 	ActiveAudioPlayer->VolumeMultiplier = 0;
@@ -27,13 +29,14 @@ void ABallRoomInstrument::BeginPlay()
 		UE_LOG(LogTemp, Error, TEXT("No idle or active sound!"))
 }
 
-void ABallRoomInstrument::ChangeToIdleSound()
+void ABallRoomInstrument::ResetToIdleSound()
 {
-	// AudioPlayer->SetSound(IdleSound);
-
 	// Turns on idle sound and turns off active sound by adjusting volume to keep everything in sync 
 	AudioPlayer->SetVolumeMultiplier(1);
-	ActiveAudioPlayer->SetVolumeMultiplier(0); 
+	ActiveAudioPlayer->SetVolumeMultiplier(0);
+
+	// make the instrument interactable again 
+	SetIsInteractable(true); 
 }
 
 void ABallRoomInstrument::InteractSuccessful()
@@ -46,6 +49,9 @@ void ABallRoomInstrument::InteractSuccessful()
 
 	AudioPlayer->SetVolumeMultiplier(0);
 	ActiveAudioPlayer->SetVolumeMultiplier(1);
+
+	// Turn off interactability so it cannot be interacted with when "active" 
+	SetIsInteractable(false);
 	
 	PuzzleManager->PlayerInteractedWithInstrument(this);
 }

@@ -17,7 +17,8 @@ class GRIM_API ABallRoomInstrument : public AInteractableAudioPlayer
 public:
 	virtual void BeginPlay() override;
 
-	void ChangeToIdleSound(); 
+	// Function called by PuzzleManager which resets the instrument to reset the whole puzzle 
+	void ResetToIdleSound(); 
 
 protected:
 	virtual void InteractSuccessful() override;

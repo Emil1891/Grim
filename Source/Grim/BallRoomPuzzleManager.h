@@ -26,6 +26,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	TArray<AInteractableAudioPlayer*> CorrectInstrumentOrder;
 
+	UPROPERTY()
 	TArray<AInteractableAudioPlayer*> PlayerInputOrder;
 
 	// Door to open upon quest complete 

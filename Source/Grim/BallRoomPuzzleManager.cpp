@@ -48,7 +48,7 @@ void ABallRoomPuzzleManager::ResetPuzzle()
 	// and resetting every instrument to idle sound
 	for(auto Instrument : CorrectInstrumentOrder)
 		if(auto BallInstrument = Cast<ABallRoomInstrument>(Instrument))
-			BallInstrument->ChangeToIdleSound();
+			BallInstrument->ResetToIdleSound();
 	
 	if(PuzzleFailedSound)
 		UGameplayStatics::PlaySound2D(this, PuzzleFailedSound); 
