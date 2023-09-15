@@ -10,14 +10,11 @@ ADoor::ADoor()
 	RootComponent = Mesh;
 
 	TriggerZone->SetupAttachment(RootComponent); 
-
 }
 
 void ADoor::InteractSuccessful()
 {
 	Super::InteractSuccessful();
-
-	UE_LOG(LogTemp, Warning, TEXT("Open sesame"))
 
 	// simply play audio and destroy the door for now, animation later 
 	if(DoorOpenSound)

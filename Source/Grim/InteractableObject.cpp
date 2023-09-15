@@ -35,45 +35,43 @@ void AInteractableObject::BeginPlay()
 	PlayerController->InputComponent->BindAction(TEXT("Interact"), EInputEvent::IE_Pressed, this, &AInteractableObject::PlayerInteracted); 
 }
 
-// Called every frame
-void AInteractableObject::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
 void AInteractableObject::PlayerInteracted()
 {
-	if(bPlayerIsInZone)
+	if(bPlayerIsInZone && bIsInteractable)
 		InteractSuccessful(); 
 }
 
 void AInteractableObject::TriggerZoneEntered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComponent, int OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if(OtherActor != Player)
+	// if not interactable or not colliding with player 
+	if(!bIsInteractable || OtherActor != Player)
 		return;
 
 	bPlayerIsInZone = true;
 
 	if(InteractEnterSound)
-		UGameplayStatics::PlaySoundAtLocation(this, InteractEnterSound, GetActorLocation()); 
+		UGameplayStatics::PlaySoundAtLocation(this, InteractEnterSound, GetActorLocation());
 }
 
 void AInteractableObject::TriggerZoneExited(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComponent, int OtherBodyIndex)
 {
-	if(OtherActor != Player)
+	// if not interactable and player has exited the trigger zone after it was or not stopping collision with player 
+	if((!bIsInteractable && !bPlayerIsInZone) || OtherActor != Player)
 		return;
 
 	bPlayerIsInZone = false;
 
 	if(InteractExitSound)
-		UGameplayStatics::PlaySoundAtLocation(this, InteractExitSound, GetActorLocation()); 
+		UGameplayStatics::PlaySoundAtLocation(this, InteractExitSound, GetActorLocation());
 }
 
 void AInteractableObject::InteractSuccessful()
 {
-	OnPlayerInteract(); 
+	OnPlayerInteract();
+
+	if(bCanOnlyInteractOnce)
+		bIsInteractable = false;
 }
 

@@ -36,8 +36,9 @@ protected:
 	UStaticMeshComponent* TriggerZone;
 	
 public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	bool IsInteractable() const { return bIsInteractable; }
+
+	void SetIsInteractable(const bool bNewInteractable) { bIsInteractable = bNewInteractable; }
 
 private:
 
@@ -65,5 +66,10 @@ private:
 	// Sound to play when player exits the trigger zone and can no longer interact 
 	UPROPERTY(EditAnywhere)
 	USoundBase* InteractExitSound = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	bool bCanOnlyInteractOnce = false;
+
+	bool bIsInteractable = true; 
 
 };

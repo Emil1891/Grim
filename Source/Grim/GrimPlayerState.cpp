@@ -50,5 +50,4 @@ void AGrimPlayerState::Tick(float DeltaSeconds)
 
 	// update the fear/proximity value in the audio component 
 	FearAudioComponent->SetFloatParameter(FName("Proximity"), FearLevel);
-	UE_LOG(LogTemp, Warning, TEXT("Fear: %f"), FearLevel)
 }
