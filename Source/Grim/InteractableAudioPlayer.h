@@ -18,6 +18,7 @@ public:
 	AInteractableAudioPlayer();
 
 protected:
+	
 	virtual void InteractSuccessful() override;
 	
 	// Audio component playing the sound 
