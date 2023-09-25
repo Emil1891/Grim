@@ -59,17 +59,17 @@ private:
 
 	bool bPlayerIsInZone = false;
 
-	// Sound to play when the player enters the trigger zone and can interact 
+	// Sound to play when the player enters the trigger zone and can interact (looping sound)
 	UPROPERTY(EditAnywhere)
 	USoundBase* InteractEnterSound = nullptr;
-
-	// Sound to play when player exits the trigger zone and can no longer interact 
-	UPROPERTY(EditAnywhere)
-	USoundBase* InteractExitSound = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	bool bCanOnlyInteractOnce = false;
 
-	bool bIsInteractable = true; 
+	bool bIsInteractable = true;
+
+	// The audio player handling sound to play when in the interaction zone 
+	UPROPERTY(EditAnywhere)
+	UAudioComponent* InteractAudioPlayer; 
 
 };
