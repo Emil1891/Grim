@@ -33,7 +33,24 @@ void AGalleryQuestManager::BeginPlay()
 
 	Player = UGameplayStatics::GetPlayerPawn(this, 0);
 
-	Player->InputComponent->BindAction("RepeatQuest", IE_Pressed, this, &AGalleryQuestManager::RepeatQuest); 
+	Player->InputComponent->BindAction("RepeatQuest", IE_Pressed, this, &AGalleryQuestManager::RepeatQuest);
+
+	SetWhoIsJuliet(); 
+}
+
+void AGalleryQuestManager::SetWhoIsJuliet()
+{
+	TArray<AActor*> People;
+
+	UGameplayStatics::GetAllActorsOfClass(this, AGalleryPerson::StaticClass(), People);
+
+	CorrectPerson = People[FMath::RandRange(0, People.Num() - 1)];
+
+	// Update the text's location to easily see who Juliet is (for us) 
+	FVector NewTextLoc = CorrectPerson->GetActorLocation();
+	NewTextLoc.Z = JulietText->GetActorLocation().Z;
+	NewTextLoc.Y -= 100.f; // Offset so text is centred above the person 
+	JulietText->SetActorLocation(NewTextLoc); 
 }
 
 void AGalleryQuestManager::TalkedToPerson(const AGalleryPerson* Person)

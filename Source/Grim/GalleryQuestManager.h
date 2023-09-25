@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InteractableAudioPlayer.h"
 #include "GalleryQuestManager.generated.h"
 
 class AGalleryPerson;
@@ -32,8 +31,11 @@ private:
 	UPROPERTY(EditAnywhere)
 	class AQuestDoor* QuestDoor;
 
+	UPROPERTY() 
+	AActor* CorrectPerson; // Juliet, is set (randomized) in begin play 
+
 	UPROPERTY(EditAnywhere)
-	AGalleryPerson* CorrectPerson; // Juliet
+	AActor* JulietText; 
 
 	bool bLevelComplete = false;
 
@@ -73,5 +75,8 @@ private:
 
 	void RepeatQuest();
 
-	void DisableInteractionInLevel() const; 
+	void DisableInteractionInLevel() const;
+
+	// Sets Juliet by randomizing 
+	void SetWhoIsJuliet(); 
 };
