@@ -11,7 +11,7 @@ AGalleryQuestManager::AGalleryQuestManager()
 {
 	// Create the trigger zone 
 	TriggerZone = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Trigger zone"));
-	TriggerZone->SetupAttachment(RootComponent);
+	RootComponent = TriggerZone; 
 	TriggerZone->SetCollisionResponseToAllChannels(ECR_Overlap); // Set to overlap
 	TriggerZone->SetCollisionEnabled(ECollisionEnabled::QueryOnly); // And to only query 
 
@@ -19,23 +19,32 @@ AGalleryQuestManager::AGalleryQuestManager()
 	TriggerZone->OnComponentBeginOverlap.AddDynamic(this, &AGalleryQuestManager::TriggerZoneEntered);
 
 	// Create the audio player 
-	AudioPlayer = CreateDefaultSubobject<UAudioComponent>(TEXT("Audio Player"));
-	AudioPlayer->SetupAttachment(RootComponent); 
+	//AudioPlayer = CreateDefaultSubobject<UAudioComponent>(TEXT("Audio Player"));
+
+	//AudioPlayer->SetupAttachment(RootComponent);
 }
 
 void AGalleryQuestManager::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AudioPlayer = FindComponentByClass<UAudioComponent>(); 
 	
-	// Set and play the lure sound 
-	AudioPlayer->SetSound(LureSound);
-	AudioPlayer->Play();
+	// Set and play the lure sound
+	FTimerHandle TimerHandleIntro;
+	GetWorldTimerManager().SetTimer(TimerHandleIntro, this, &AGalleryQuestManager::PlayDelayedSound, 17);
 
 	Player = UGameplayStatics::GetPlayerPawn(this, 0);
 
 	Player->InputComponent->BindAction("RepeatQuest", IE_Pressed, this, &AGalleryQuestManager::RepeatQuest);
 
 	SetWhoIsJuliet(); 
+}
+
+void AGalleryQuestManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	GetWorldTimerManager().ClearAllTimersForObject(this);
 }
 
 void AGalleryQuestManager::SetWhoIsJuliet()
@@ -65,12 +74,14 @@ void AGalleryQuestManager::TalkedToPerson(const AGalleryPerson* Person)
 
 void AGalleryQuestManager::QuestCompleted()
 {
+	OnQuestComplete();
 	bLevelComplete = true;
 	DisableInteractionAndLowerVolume();
 	
 	QuestDoor->QuestCompleted(); // Open door
-	AudioPlayer->SetSound(QuestSuccessSound); 
-	AudioPlayer->Play(); 
+	AudioPlayer->SetSound(QuestSuccessSound);
+	AudioPlayer->Play();
+	
 }
 
 void AGalleryQuestManager::TalkedToWrongPerson()
@@ -84,13 +95,14 @@ void AGalleryQuestManager::TalkedToWrongPerson()
 void AGalleryQuestManager::TriggerZoneEntered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComponent, int OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	
 	// DO nothing if the collision was not with player 
 	if(OtherActor != Player)
 		return; 
 	
 	AudioPlayer->SetSound(QuestIntroSound); 
 	AudioPlayer->Play();
-
+	OnQuestStarted();
 	// Destroy the trigger zone, as it is not needed anymore, quest is repeated when player presses the designated button
 	TriggerZone->DestroyComponent(); 
 }
@@ -115,4 +127,10 @@ void AGalleryQuestManager::DisableInteractionAndLowerVolume() const
 			// and lower volume for everyone 
 			GalleryPerson->GetAudioComponent()->SetVolumeMultiplier(TalkVolumeOnQuestComplete); 
 		}
+}
+
+void AGalleryQuestManager::PlayDelayedSound()
+{
+	AudioPlayer->SetSound(LureSound);
+	AudioPlayer->Play();
 }
