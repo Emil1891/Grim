@@ -7,6 +7,11 @@
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+void AGalleryPerson::SetSound(USoundBase* TalkSound) const
+{
+	AudioPlayer->SetSound(TalkSound); 
+}
+
 void AGalleryPerson::BeginPlay()
 {
 	Super::BeginPlay();

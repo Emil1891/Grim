@@ -14,6 +14,9 @@ class GRIM_API AGalleryPerson : public AInteractableAudioPlayer
 {
 	GENERATED_BODY()
 
+public:
+	void SetSound(USoundBase* TalkSound) const; 
+
 protected:
 
 	virtual void BeginPlay() override;

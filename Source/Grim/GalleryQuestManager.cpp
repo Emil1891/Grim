@@ -38,7 +38,9 @@ void AGalleryQuestManager::BeginPlay()
 
 	Player->InputComponent->BindAction("RepeatQuest", IE_Pressed, this, &AGalleryQuestManager::RepeatQuest);
 
-	SetWhoIsJuliet(); 
+	SetWhoIsJuliet();
+
+	AssignTalkingSounds(); 
 }
 
 void AGalleryQuestManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -49,7 +51,14 @@ void AGalleryQuestManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void AGalleryQuestManager::SetWhoIsJuliet()
 {
-	UGameplayStatics::GetAllActorsOfClass(this, AGalleryPerson::StaticClass(), People);
+	TArray<AActor*> PeopleActors; 
+	UGameplayStatics::GetAllActorsOfClass(this, AGalleryPerson::StaticClass(), PeopleActors);
+
+	for(const auto Person : PeopleActors)
+	{
+		if(auto PersonGallery = Cast<AGalleryPerson>(Person))
+			People.Add(PersonGallery); 
+	}
 
 	CorrectPerson = People[FMath::RandRange(0, People.Num() - 1)];
 
@@ -59,6 +68,19 @@ void AGalleryQuestManager::SetWhoIsJuliet()
 	NewTextLoc.Y -= 100.f; // Offset so text is centred above the person 
 	JulietText->SetActorLocation(NewTextLoc); 
 }
+
+void AGalleryQuestManager::AssignTalkingSounds()
+{
+	int WrongTalkCounter = 0; 
+	for(const auto Person : People)
+	{
+		if(Person == CorrectPerson)
+			Person->SetSound(JulietTalkingSound);
+		else
+			Person->SetSound(WrongTalkingSounds[WrongTalkCounter++]); 
+	}
+}
+
 
 void AGalleryQuestManager::TalkedToPerson(const AGalleryPerson* Person)
 {

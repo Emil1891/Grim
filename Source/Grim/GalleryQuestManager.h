@@ -94,8 +94,16 @@ private:
 	void SetWhoIsJuliet();
 
 	UPROPERTY()
-	TArray<AActor*> People; 
+	TArray<AGalleryPerson*> People; 
 
 	UPROPERTY(EditAnywhere)
-	float TalkVolumeOnQuestComplete = 0.5f; 
+	float TalkVolumeOnQuestComplete = 0.5f;
+
+	UPROPERTY(EditAnywhere)
+	TArray<USoundBase*> WrongTalkingSounds;
+
+	UPROPERTY(EditAnywhere)
+	USoundBase* JulietTalkingSound;
+
+	void AssignTalkingSounds(); 
 };
