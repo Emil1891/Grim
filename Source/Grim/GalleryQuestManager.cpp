@@ -89,7 +89,10 @@ void AGalleryQuestManager::TalkedToPerson(const AGalleryPerson* Person)
 		return; 
 	
 	if(Person == CorrectPerson)
+	{
 		QuestCompleted();
+		CorrectPerson->Destroy(); // Kill Juliet 
+	}
 	else
 		TalkedToWrongPerson(); 
 }
