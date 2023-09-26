@@ -101,6 +101,7 @@ void AGalleryQuestManager::QuestCompleted()
 	DisableInteractionAndLowerVolume();
 	
 	QuestDoor->QuestCompleted(); // Open door
+	CorrectPerson->Destroy();
 	AudioPlayer->SetSound(QuestSuccessSound);
 	AudioPlayer->Play();
 	
@@ -111,7 +112,8 @@ void AGalleryQuestManager::TalkedToWrongPerson()
 	// Get a random sound from the potential sounds and play it 
 	const auto SoundToPlay = WrongSounds[FMath::RandRange(0, WrongSounds.Num() - 1)]; 
 	AudioPlayer->SetSound(SoundToPlay);
-	AudioPlayer->Play(); 
+	AudioPlayer->Play();
+	TalkedToWrongPersonEvent();
 }
 
 void AGalleryQuestManager::TriggerZoneEntered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -122,19 +124,23 @@ void AGalleryQuestManager::TriggerZoneEntered(UPrimitiveComponent* OverlappedCom
 	if(OtherActor != Player)
 		return; 
 	
-	AudioPlayer->SetSound(QuestIntroSound); 
+	AudioPlayer->SetSound(QuestIntroSound);
+	FTimerHandle timerHandleRepeater;
+	GetWorldTimerManager().SetTimer(timerHandleRepeater, this, &AGalleryQuestManager::SetQuestIntroFinished, 26);
 	AudioPlayer->Play();
 	OnQuestStarted();
 	// Destroy the trigger zone, as it is not needed anymore, quest is repeated when player presses the designated button
-	TriggerZone->DestroyComponent(); 
+	TriggerZone->DestroyComponent();
+
 }
 
 void AGalleryQuestManager::RepeatQuest()
 {
 	// Do not play if quest is complete 
-	if(bLevelComplete)
-		return; 
-	
+	if(bLevelComplete || bIntroComplete == false)
+		return;
+
+	OnReminderStarted();
 	AudioPlayer->SetSound(QuestShortRepeat);
 	AudioPlayer->Play(); 
 }
@@ -155,4 +161,10 @@ void AGalleryQuestManager::PlayDelayedSound()
 {
 	AudioPlayer->SetSound(LureSound);
 	AudioPlayer->Play();
+}
+
+void AGalleryQuestManager::SetQuestIntroFinished()
+{
+	bIntroComplete = true;
+	
 }

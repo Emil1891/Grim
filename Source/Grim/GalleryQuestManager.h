@@ -30,9 +30,16 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnQuestStarted();
-	
+		
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnQuestComplete();
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnReminderStarted();
+
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void TalkedToWrongPersonEvent();
 	
 private:
 
@@ -47,8 +54,11 @@ private:
 
 	bool bLevelComplete = false;
 
-	void QuestCompleted();
+	
+	bool bIntroComplete = false;
 
+	void QuestCompleted();
+	
 	void TalkedToWrongPerson(); 
 	
 	UPROPERTY(EditAnywhere)
@@ -74,6 +84,7 @@ private:
 	UStaticMeshComponent* TriggerZone;
 
 	void PlayDelayedSound();
+	void SetQuestIntroFinished();
 
 	UFUNCTION()
 	void TriggerZoneEntered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
