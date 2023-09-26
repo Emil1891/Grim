@@ -40,8 +40,6 @@ void AGalleryQuestManager::BeginPlay()
 
 void AGalleryQuestManager::SetWhoIsJuliet()
 {
-	TArray<AActor*> People;
-
 	UGameplayStatics::GetAllActorsOfClass(this, AGalleryPerson::StaticClass(), People);
 
 	CorrectPerson = People[FMath::RandRange(0, People.Num() - 1)];
@@ -68,7 +66,7 @@ void AGalleryQuestManager::TalkedToPerson(const AGalleryPerson* Person)
 void AGalleryQuestManager::QuestCompleted()
 {
 	bLevelComplete = true;
-	DisableInteractionInLevel();
+	DisableInteractionAndLowerVolume();
 	
 	QuestDoor->QuestCompleted(); // Open door
 	AudioPlayer->SetSound(QuestSuccessSound); 
@@ -107,14 +105,14 @@ void AGalleryQuestManager::RepeatQuest()
 	AudioPlayer->Play(); 
 }
 
-void AGalleryQuestManager::DisableInteractionInLevel() const
+void AGalleryQuestManager::DisableInteractionAndLowerVolume() const
 {
-	// Get every person 
-	TArray<AActor*> People; 
-	UGameplayStatics::GetAllActorsOfClass(this, AGalleryPerson::StaticClass(), People);
-
 	// Set interactable to false 
 	for(const auto Person : People)
 		if(const auto GalleryPerson = Cast<AGalleryPerson>(Person))
-			GalleryPerson->SetIsInteractable(false); 
+		{
+			GalleryPerson->SetIsInteractable(false);
+			// and lower volume for everyone 
+			GalleryPerson->GetAudioComponent()->SetVolumeMultiplier(TalkVolumeOnQuestComplete); 
+		}
 }

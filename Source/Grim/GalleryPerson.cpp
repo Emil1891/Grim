@@ -13,9 +13,9 @@ void AGalleryPerson::BeginPlay()
 
 	if(!QuestManager)
 		QuestManager = Cast<AGalleryQuestManager>(UGameplayStatics::GetActorOfClass(this, AGalleryQuestManager::StaticClass()));
-	
-	const float RandomStartTime = FMath::RandRange(0.f, AudioPlayer->GetSound()->GetDuration());
 
+	// GetDuration() returns an arbitrary large number if the sound is set to looping so need to read duration directly 
+	const float RandomStartTime = FMath::RandRange(0.f, AudioPlayer->GetSound()->Duration);
 	AudioPlayer->Play(RandomStartTime); 
 }
 

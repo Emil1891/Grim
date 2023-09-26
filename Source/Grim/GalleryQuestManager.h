@@ -75,8 +75,14 @@ private:
 
 	void RepeatQuest();
 
-	void DisableInteractionInLevel() const;
+	void DisableInteractionAndLowerVolume() const;
 
 	// Sets Juliet by randomizing 
-	void SetWhoIsJuliet(); 
+	void SetWhoIsJuliet();
+
+	UPROPERTY()
+	TArray<AActor*> People; 
+
+	UPROPERTY(EditAnywhere)
+	float TalkVolumeOnQuestComplete = 0.5f; 
 };
