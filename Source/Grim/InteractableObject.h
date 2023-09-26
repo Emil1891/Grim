@@ -70,6 +70,12 @@ private:
 
 	// The audio player handling sound to play when in the interaction zone 
 	UPROPERTY(EditAnywhere)
-	UAudioComponent* InteractAudioPlayer; 
+	UAudioComponent* InteractAudioPlayer;
+
+	UPROPERTY(EditAnywhere)
+	float InteractFadeInDuration = 1.f;
+
+	UPROPERTY(EditAnywhere)
+	float InteractFadeOutDuration = 0.3f; 
 
 };

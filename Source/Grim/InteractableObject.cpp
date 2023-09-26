@@ -57,8 +57,8 @@ void AInteractableObject::TriggerZoneEntered(UPrimitiveComponent* OverlappedComp
 
 	bPlayerIsInZone = true;
 
-	// Start playing interact zone sound 
-	InteractAudioPlayer->Play(); 
+	// Start playing interact zone sound by fading it in 
+	InteractAudioPlayer->FadeIn(InteractFadeInDuration);  
 }
 
 void AInteractableObject::TriggerZoneExited(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -70,8 +70,8 @@ void AInteractableObject::TriggerZoneExited(UPrimitiveComponent* OverlappedCompo
 
 	bPlayerIsInZone = false;
 	
-	// Stop playing interact zone sound 
-	InteractAudioPlayer->Stop(); 
+	// Stop playing interact zone sound by fading it out 
+	InteractAudioPlayer->FadeOut(InteractFadeOutDuration, 0); 
 }
 
 void AInteractableObject::InteractSuccessful()
