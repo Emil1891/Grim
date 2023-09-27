@@ -54,6 +54,7 @@ private:
 
 	bool bLevelComplete = false;
 
+	bool bQuestStarted = false; 
 	
 	bool bIntroComplete = false;
 
@@ -67,6 +68,9 @@ private:
 	// The sound meant to lure the player to go talk to Romeo 
 	UPROPERTY(EditAnywhere)
 	USoundBase* LureSound;
+
+	UPROPERTY(EditAnywhere)
+	float LureDelayTime = 10.f; 
 
 	UPROPERTY(EditAnywhere)
 	USoundBase* QuestIntroSound;

@@ -125,13 +125,13 @@ void AGalleryQuestManager::TriggerZoneEntered(UPrimitiveComponent* OverlappedCom
 		return; 
 	
 	AudioPlayer->SetSound(QuestIntroSound);
-	FTimerHandle timerHandleRepeater;
-	GetWorldTimerManager().SetTimer(timerHandleRepeater, this, &AGalleryQuestManager::SetQuestIntroFinished, 26);
+	FTimerHandle TimerHandleRepeater;
+	GetWorldTimerManager().SetTimer(TimerHandleRepeater, this, &AGalleryQuestManager::SetQuestIntroFinished, 26);
 	AudioPlayer->Play();
 	OnQuestStarted();
+	bQuestStarted = true; 
 	// Destroy the trigger zone, as it is not needed anymore, quest is repeated when player presses the designated button
 	TriggerZone->DestroyComponent();
-
 }
 
 void AGalleryQuestManager::RepeatQuest()
@@ -159,12 +159,17 @@ void AGalleryQuestManager::DisableInteractionAndLowerVolume() const
 
 void AGalleryQuestManager::PlayDelayedSound()
 {
+	if(bQuestStarted)
+		return;
+	
 	AudioPlayer->SetSound(LureSound);
 	AudioPlayer->Play();
+
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, this, &AGalleryQuestManager::PlayDelayedSound, LureDelayTime); 
 }
 
 void AGalleryQuestManager::SetQuestIntroFinished()
 {
 	bIntroComplete = true;
-	
 }
