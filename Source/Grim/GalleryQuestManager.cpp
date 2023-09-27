@@ -111,8 +111,8 @@ void AGalleryQuestManager::TalkedToWrongPerson()
 {
 	// Get a random sound from the potential sounds and play it 
 	const auto SoundToPlay = WrongSounds[FMath::RandRange(0, WrongSounds.Num() - 1)]; 
-	AudioPlayer->SetSound(SoundToPlay);
-	AudioPlayer->Play();
+	//AudioPlayer->SetSound(SoundToPlay);
+	UGameplayStatics::SpawnSound2D(this, SoundToPlay);
 	TalkedToWrongPersonEvent();
 }
 
