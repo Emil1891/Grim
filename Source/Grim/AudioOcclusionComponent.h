@@ -24,6 +24,10 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	/* Function to manually add an audio component to also occlude, only necessary for components no present in level
+	 * on begin play. Checks if it is already added to prevent duplicates */
+	void AddAudioComponentToOcclusion(UAudioComponent* AudioComponent); 
+
 private: 
 
 	// Array holding all audio components in the level 
@@ -36,5 +40,26 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> ActorClassToSearchFor = AActor::StaticClass();
 
-	
+	bool DoLineTrace(TArray<FHitResult>& HitResultsOut, const FVector& StartLocation, const FVector& EndLocation) const;
+
+	// The camera's location will be the start location for all line traces as it is located in the player's "head" 
+	UPROPERTY()
+	class UCameraComponent* CameraComp = nullptr;
+
+	void UpdateAudioComp(UAudioComponent* AudioComp);
+
+	float GetOcclusionValue(const FHitResult& HitResult, const FHitResult& HitResultFromAudio) const;
+
+	float GetDistanceToEdgeValue(const FHitResult& HitResult, const FHitResult& HitResultFromAudio) const;
+
+	float GetThicknessValue(const FHitResult& HitResultFromPlayer, const FHitResult& HitResultFromAudio) const; 
+
+	UPROPERTY(EditAnywhere)
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectsToQuery;
+
+	float MaxMeshDistanceToBlockAllAudio = 900.f;
+
+	float MaxWidthDistanceToBlockAllAudio = 2000.f; 
+
+	void ResetAudioComponentOnNoBlock(UAudioComponent* AudioComponent); 
 };
