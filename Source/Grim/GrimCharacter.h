@@ -99,6 +99,9 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	USoundBase* CurrentAudioInstructions;
 
+	UPROPERTY()
+	bool bIsDead = false;
+
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);

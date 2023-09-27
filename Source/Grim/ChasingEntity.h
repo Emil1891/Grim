@@ -52,8 +52,11 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	UBoxComponent* TriggerCollisionBox;
 	
+	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess=true))
+	TArray<FVector> Positions;
+	
 	UPROPERTY(EditAnywhere)
-	FVector TargetPosition;
+	int TargetPosition = 1;
 	
 	UPROPERTY(EditAnywhere)
 	float LerpSpeed = 0.005;
@@ -62,5 +65,14 @@ private:
 	bool bShouldMove = false;
 	
 	UPROPERTY(EditDefaultsOnly)
-	USoundBase* Sound;
+	USoundBase* StartSound;
+	
+	UPROPERTY(EditDefaultsOnly)
+	USoundBase* LoopingSound1;
+	
+	UPROPERTY(EditDefaultsOnly)
+	USoundBase* LoopingSound2;
+	
+	UPROPERTY(EditDefaultsOnly)
+	USoundBase* CombustionSound;
 };
