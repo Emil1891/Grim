@@ -3,6 +3,7 @@
 
 #include "AudioOcclusionComponent.h"
 
+#include "AITypes.h"
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -56,7 +57,6 @@ void UAudioOcclusionComponent::SetAudioComponents()
 	{
 		// If the actor has an audio component 
 		if(auto AudioComp = Actor->FindComponentByClass<UAudioComponent>())
-			if(AudioComp->GetOwner()->GetActorNameOrLabel().Equals("TestSound")) // TODO: REMOVE THIS, ONLY USED FOR TESTING 
 				AudioComponents.Add(AudioComp); // Add it to the array
 	}
 }
@@ -93,12 +93,26 @@ void UAudioOcclusionComponent::UpdateAudioComp(UAudioComponent* AudioComp)
 	float LowestOcclusionValue = 1; 
 	for(int i = 0; i < HitResultsFromAudio.Num(); i++)
 	{
-		const float NewOccValue = GetOcclusionValue(HitResultsFromPlayer[i], HitResultsFromAudio[i]);
-		LowestOcclusionValue = FMath::Min(LowestOcclusionValue, NewOccValue);
+		//Jätte ful kod, help me Emil.
+		float OldOccValue = GetOcclusionValue(HitResultsFromPlayer[i], HitResultsFromAudio[i]);
+		float NewOccValue = (GetOcclusionValue(HitResultsFromPlayer[i], HitResultsFromAudio[i]) + OldOccValue);
+		//LowestOcclusionValue = FMath::Min(LowestOcclusionValue, NewOccValue);
+		LowestOcclusionValue = NewOccValue;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Volume: %f"), LowestOcclusionValue)
-	AudioComp->SetVolumeMultiplier(LowestOcclusionValue); 
+	if(LowestOcclusionValue > 1)
+	{
+		LowestOcclusionValue = 1;
+	}
+	
+	
+	AudioComp->SetVolumeMultiplier(LowestOcclusionValue);
+	AudioComp->SetLowPassFilterFrequency(LowestOcclusionValue * 4000);
+	AudioComp->SetLowPassFilterEnabled(false);
+	AudioComp->SetLowPassFilterEnabled(true);
+
+	//UE_LOG(LogTemp, Warning, TEXT("Volume: %f Frequency: %f"), LowestOcclusionValue, LowestOcclusionValue * 4000);
+	
 }
 
 float UAudioOcclusionComponent::GetOcclusionValue(const FHitResult& HitResultFromPlayer, const FHitResult& HitResultFromAudio) const
@@ -124,7 +138,7 @@ float UAudioOcclusionComponent::GetDistanceToEdgeValue(const FHitResult& HitResu
 
 	DistanceFromImpactToClosestPoint = 1 - DistanceFromImpactToClosestPoint; 
 	
-	UE_LOG(LogTemp, Warning, TEXT("Width value: %f"), DistanceFromImpactToClosestPoint)
+	//UE_LOG(LogTemp, Warning, TEXT("Width value: %f"), DistanceFromImpactToClosestPoint)
 
 	return DistanceFromImpactToClosestPoint;
 }
@@ -134,7 +148,7 @@ float UAudioOcclusionComponent::GetThicknessValue(const FHitResult& HitResultFro
 	// Get how far the ray traveled through the blocking mesh 
 	float RayTravelDistance = FVector::Dist(HitResultFromPlayer.ImpactPoint, HitResultFromAudio.ImpactPoint);
 	
-	UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), RayTravelDistance)
+	//UE_LOG(LogTemp, Warning, TEXT("Distance: %f"), RayTravelDistance)
 
 	// Divide by the max distance to travel before blocking all audio and clamp to get a value between 0 and 1 
 	RayTravelDistance /= MaxMeshDistanceToBlockAllAudio; 
@@ -142,13 +156,14 @@ float UAudioOcclusionComponent::GetThicknessValue(const FHitResult& HitResultFro
 	// "Reverse" so full block means 0 audio volume and vice versa 
 	RayTravelDistance = 1 - RayTravelDistance; 
 
-	UE_LOG(LogTemp, Warning, TEXT("RayTravelDistance: %f"), FMath::Clamp(RayTravelDistance, 0, 1)) 
+	//UE_LOG(LogTemp, Warning, TEXT("RayTravelDistance: %f"), FMath::Clamp(RayTravelDistance, 0, 1)) 
 
 	return RayTravelDistance; 
 }
 
 void UAudioOcclusionComponent::ResetAudioComponentOnNoBlock(UAudioComponent* AudioComponent)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Volume: 1"))
-	AudioComponent->SetVolumeMultiplier(1); 
+	//UE_LOG(LogTemp, Warning, TEXT("Volume: 1"))
+	AudioComponent->SetVolumeMultiplier(1);
+	AudioComponent->SetLowPassFilterEnabled(false);
 }
