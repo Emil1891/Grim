@@ -46,14 +46,18 @@ private:
 	UPROPERTY()
 	class UCameraComponent* CameraComp = nullptr;
 
-	void UpdateAudioComp(UAudioComponent* AudioComp);
+	void UpdateAudioComp(UAudioComponent* AudioComp, const float DeltaTime);
 
-	float GetOcclusionValue(const FHitResult& HitResult, const FHitResult& HitResultFromAudio) const;
+	// Gets the total occlusion value between 0 and 1 
+	float GetOcclusionValue(const FHitResult& HitResultFromPlayer, const FHitResult& HitResultFromAudio);
+	float GetLowPassValueBasedOnDistanceToMesh(const FHitResult& HitResultFromPlayer) const;
 
-	float GetDistanceToEdgeValue(const FHitResult& HitResult, const FHitResult& HitResultFromAudio) const;
+	// Gets a value clamped between 0 and 1 based on the thickness of the meshes between the player and the audio source
+	float GetThicknessValue(const FHitResult& HitResultFromPlayer, const FHitResult& HitResultFromAudio) const;
 
-	float GetThicknessValue(const FHitResult& HitResultFromPlayer, const FHitResult& HitResultFromAudio) const; 
+	float GetMaterialValue(const FHitResult& HitResult); 
 
+	// Which object types that should be considered to block audio 
 	UPROPERTY(EditAnywhere)
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectsToQuery;
 
@@ -61,5 +65,18 @@ private:
 
 	float MaxWidthDistanceToBlockAllAudio = 2000.f; 
 
-	void ResetAudioComponentOnNoBlock(UAudioComponent* AudioComponent); 
+	void ResetAudioComponentOnNoBlock(UAudioComponent* AudioComponent);
+
+	void SetLowPassFilter(UAudioComponent* AudioComp, const TArray<FHitResult>& HitResultFromPlayer, const float OcclusionValue);
+
+	// When this distance away from the wall or more, low pass will be the same 
+	UPROPERTY(EditAnywhere)
+	float DistanceToWallToStopAddingLowPass = 700.f;
+
+	// The maximum frequency to allow from audio sources when occluded 
+	UPROPERTY(EditAnywhere)
+	float MaxLowPassFrequency = 4000.f; 
+
+	UPROPERTY(EditAnywhere)
+	TMap<UMaterialInterface*, float> MaterialOcclusionMap; 
 };
