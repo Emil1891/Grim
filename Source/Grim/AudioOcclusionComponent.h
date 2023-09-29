@@ -30,22 +30,55 @@ public:
 
 private: 
 
+#pragma region DataMembers
+	
 	// Array holding all audio components in the level 
 	TArray<UAudioComponent*> AudioComponents;
 
-	// Called in begin play to fill the array 
-	void SetAudioComponents();
-	
 	// The class that are checked to see if they have an audio component, default = all actors 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> ActorClassToSearchFor = AActor::StaticClass();
-
-	bool DoLineTrace(TArray<FHitResult>& HitResultsOut, const FVector& StartLocation, const FVector& EndLocation) const;
-
+	
 	// The camera's location will be the start location for all line traces as it is located in the player's "head" 
 	UPROPERTY()
 	class UCameraComponent* CameraComp = nullptr;
+	
+	// Which object types that should be considered to block audio 
+	UPROPERTY(EditAnywhere)
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectsToQuery;
 
+	float MaxMeshDistanceToBlockAllAudio = 900.f;
+
+	float MaxWidthDistanceToBlockAllAudio = 2000.f;
+	
+	// When this distance away from the wall or more, low pass will be the same 
+	UPROPERTY(EditAnywhere)
+	float DistanceToWallToStopAddingLowPass = 700.f;
+
+	// The maximum frequency to allow from audio sources when occluded 
+	UPROPERTY(EditAnywhere)
+	float MaxLowPassFrequency = 17000.f; 
+
+	UPROPERTY(EditAnywhere)
+	TMap<UMaterialInterface*, float> MaterialOcclusionMap;
+
+	UPROPERTY(EditAnywhere)
+	float DistanceToWallOffset = 60.f;
+
+	inline static float Timer = 0;
+
+	UPROPERTY(EditAnywhere)
+	float LowPassUpdateDelay = 0.1f;
+
+#pragma endregion
+
+#pragma region Functions 
+	
+	// Called in begin play to fill the array 
+	void SetAudioComponents();
+
+	bool DoLineTrace(TArray<FHitResult>& HitResultsOut, const FVector& StartLocation, const FVector& EndLocation) const;
+	
 	void UpdateAudioComp(UAudioComponent* AudioComp, const float DeltaTime);
 
 	// Gets the total occlusion value between 0 and 1 
@@ -57,26 +90,9 @@ private:
 
 	float GetMaterialValue(const FHitResult& HitResult); 
 
-	// Which object types that should be considered to block audio 
-	UPROPERTY(EditAnywhere)
-	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectsToQuery;
-
-	float MaxMeshDistanceToBlockAllAudio = 900.f;
-
-	float MaxWidthDistanceToBlockAllAudio = 2000.f; 
-
 	void ResetAudioComponentOnNoBlock(UAudioComponent* AudioComponent);
 
 	void SetLowPassFilter(UAudioComponent* AudioComp, const TArray<FHitResult>& HitResultFromPlayer, const float OcclusionValue);
 
-	// When this distance away from the wall or more, low pass will be the same 
-	UPROPERTY(EditAnywhere)
-	float DistanceToWallToStopAddingLowPass = 700.f;
-
-	// The maximum frequency to allow from audio sources when occluded 
-	UPROPERTY(EditAnywhere)
-	float MaxLowPassFrequency = 4000.f; 
-
-	UPROPERTY(EditAnywhere)
-	TMap<UMaterialInterface*, float> MaterialOcclusionMap; 
+#pragma endregion 
 };

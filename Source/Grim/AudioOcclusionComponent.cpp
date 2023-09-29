@@ -33,8 +33,19 @@ void UAudioOcclusionComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	// Gets all audio components in the level, now every tick in case of spawned audio 
+	//SetAudioComponents();
+
+	// Add to timer 
+	Timer += DeltaTime;
+
+	// Update all audio components 
 	for(UAudioComponent* Audio : AudioComponents)
-		UpdateAudioComp(Audio, DeltaTime); 
+		UpdateAudioComp(Audio, DeltaTime);
+
+	// Check if timer exceeded delay after updating all audio comps 
+	if(Timer > LowPassUpdateDelay)
+		Timer = 0; 
 }
 
 void UAudioOcclusionComponent::AddAudioComponentToOcclusion(UAudioComponent* AudioComponent)
@@ -46,15 +57,16 @@ void UAudioOcclusionComponent::AddAudioComponentToOcclusion(UAudioComponent* Aud
 
 void UAudioOcclusionComponent::SetAudioComponents()
 {
+	AudioComponents.Empty(); 
 	// Find all actors of set class (default all actors)
 	TArray<AActor*> AllFoundActors;
 	UGameplayStatics::GetAllActorsOfClass(this, ActorClassToSearchFor, AllFoundActors);
 
 	for(const auto Actor : AllFoundActors)
 	{
-		// ONLY FOR DEBUGGING TO REMOVE UNWANTED SOUNDS 
-		if(!Actor->GetActorNameOrLabel().Equals("TestSound"))
-			continue; 
+		// TODO: ONLY FOR DEBUGGING TO REMOVE UNWANTED SOUNDS
+		 //if(!Actor->GetActorNameOrLabel().Equals("TestSound"))
+		 //	continue; 
 		// If the actor has an audio component 
 		if(auto AudioComp = Actor->FindComponentByClass<UAudioComponent>())
 				AudioComponents.Add(AudioComp); // Add it to the array
@@ -90,22 +102,18 @@ void UAudioOcclusionComponent::UpdateAudioComp(UAudioComponent* AudioComp, const
 	// Reverse the hit results from the audio's perspective so they are in the same order as the player's for easier use 
 	Algo::Reverse(HitResultsFromAudio); 
 
-	// Finds the lowest occlusion value for now which is the most blocking wall 
+	// Adds all blocking meshes' occlusion values to determine how much the sound should be occluded 
 	float TotalOccValue = 0; 
 	for(int i = 0; i < HitResultsFromAudio.Num(); i++)
 		TotalOccValue += GetOcclusionValue(HitResultsFromPlayer[i], HitResultsFromAudio[i]); 
-
+	
 	TotalOccValue = FMath::Clamp(TotalOccValue, 0, 1); 
 	
 	AudioComp->SetVolumeMultiplier(1 - TotalOccValue);
 
 	// Update LowPass only at set interval for optimization 
-	static float Timer = 0;
-	if((Timer += DeltaTime) > 0.2f)
-	{
+	if(Timer > LowPassUpdateDelay)
 		SetLowPassFilter(AudioComp, HitResultsFromPlayer, TotalOccValue);
-		Timer = 0; 
-	}
 }
 
 float UAudioOcclusionComponent::GetOcclusionValue(const FHitResult& HitResultFromPlayer, const FHitResult& HitResultFromAudio) 
@@ -114,7 +122,7 @@ float UAudioOcclusionComponent::GetOcclusionValue(const FHitResult& HitResultFro
 
 	const float MaterialValue = GetMaterialValue(HitResultFromPlayer); 
 
-	const float OccValue = ThicknessValue / MaterialValue; 
+	const float OccValue = ThicknessValue * MaterialValue; 
 	
 	return FMath::Clamp(OccValue, 0, 1); 
 }
@@ -146,10 +154,10 @@ float UAudioOcclusionComponent::GetLowPassValueBasedOnDistanceToMesh(const FHitR
 
 	const float DistanceFromPlayerToMeshPoint = FVector::Dist(ClosestPointOnMeshToPlayer, CameraComp->GetComponentLocation());
 
-	const float LowPassValue = FMath::Clamp(DistanceFromPlayerToMeshPoint, 0, DistanceToWallToStopAddingLowPass) / DistanceToWallToStopAddingLowPass;
+	const float LowPassValue = FMath::Clamp(DistanceFromPlayerToMeshPoint - DistanceToWallOffset, 0, DistanceToWallToStopAddingLowPass) / DistanceToWallToStopAddingLowPass;
 	
 	UE_LOG(LogTemp, Warning, TEXT("LowPassValue based on distance to wall: %f"), LowPassValue);
-
+	
 	return LowPassValue;
 }
 
@@ -170,17 +178,22 @@ float UAudioOcclusionComponent::GetThicknessValue(const FHitResult& HitResultFro
 void UAudioOcclusionComponent::ResetAudioComponentOnNoBlock(UAudioComponent* AudioComponent)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Volume: 1"))
-	AudioComponent->SetVolumeMultiplier(1);
-	AudioComponent->SetLowPassFilterFrequency(INT_MAX);
+
+	// Resets the audio comp values 
+	if(AudioComponent->VolumeMultiplier != 1)
+		AudioComponent->SetVolumeMultiplier(1);
+
+	if(AudioComponent->bEnableLowPassFilter)
+		AudioComponent->SetLowPassFilterEnabled(false);
 }
 
 void UAudioOcclusionComponent::SetLowPassFilter(UAudioComponent* AudioComp, const TArray<FHitResult>& HitResultFromPlayer, const float OcclusionValue)
 {
-	//AudioComp->SetLowPassFilterEnabled(false);
-	float Frequency = OcclusionValue * MaxLowPassFrequency * GetLowPassValueBasedOnDistanceToMesh(HitResultFromPlayer[0]);
-	Frequency = FMath::Clamp(Frequency, 0, 20000);
+	AudioComp->SetLowPassFilterEnabled(true);
+	float Frequency = MaxLowPassFrequency * GetLowPassValueBasedOnDistanceToMesh(HitResultFromPlayer[0]);
+	Frequency = FMath::Clamp(Frequency, 200, MaxLowPassFrequency);
+
 	AudioComp->SetLowPassFilterFrequency(Frequency);
-	//AudioComp->SetLowPassFilterEnabled(true);
 	
 	UE_LOG(LogTemp, Warning, TEXT("Volume: %f Frequency: %f"), AudioComp->VolumeMultiplier, Frequency); 
 }
