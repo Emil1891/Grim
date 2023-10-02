@@ -24,8 +24,9 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	/* Function to manually add an audio component to also occlude, only necessary for components no present in level
+	/* Function to manually add an audio component to also occlude, only necessary for components not present in level
 	 * on begin play. Checks if it is already added to prevent duplicates */
+	// TODO: This is not needed if we find added audio comps ourselves (preferable)
 	void AddAudioComponentToOcclusion(UAudioComponent* AudioComponent); 
 
 private: 
@@ -47,9 +48,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectsToQuery;
 
+	// How far audio can travel through meshes until it should be completely blocked/silenced 
+	UPROPERTY(EditAnywhere)
 	float MaxMeshDistanceToBlockAllAudio = 900.f;
-
-	float MaxWidthDistanceToBlockAllAudio = 2000.f;
 	
 	// When this distance away from the wall or more, low pass will be the same 
 	UPROPERTY(EditAnywhere)
@@ -59,30 +60,40 @@ private:
 	UPROPERTY(EditAnywhere)
 	float MaxLowPassFrequency = 17000.f; 
 
+	// Map containing materials with custom set occlusion multiplier. A higher value blocks more sound and vice versa 
 	UPROPERTY(EditAnywhere)
 	TMap<UMaterialInterface*, float> MaterialOcclusionMap;
 
+	// Offset used for muffling sound when player is close to a wall. Higher value means muffling further from the wall 
 	UPROPERTY(EditAnywhere)
 	float DistanceToWallOffset = 60.f;
 
-	inline static float Timer = 0;
+	// Timer to keep track of when to update low pass for audio sources 
+	float LowPassTimer = 0; 
 
+	// How often lowpass should be updated 
 	UPROPERTY(EditAnywhere)
 	float LowPassUpdateDelay = 0.1f;
+
+	UPROPERTY(EditAnywhere)
+	bool bOnlyUseDebugSound = false; 
 
 #pragma endregion
 
 #pragma region Functions 
 	
-	// Called in begin play to fill the array 
+	// Called in begin play to fill the array with the audio comps in the level 
 	void SetAudioComponents();
 
+	// Helper func to do line trace 
 	bool DoLineTrace(TArray<FHitResult>& HitResultsOut, const FVector& StartLocation, const FVector& EndLocation) const;
 	
 	void UpdateAudioComp(UAudioComponent* AudioComp, const float DeltaTime);
 
 	// Gets the total occlusion value between 0 and 1 
 	float GetOcclusionValue(const FHitResult& HitResultFromPlayer, const FHitResult& HitResultFromAudio);
+
+	// Returns a value between zero and i based on player's distance to the blocking wall  
 	float GetLowPassValueBasedOnDistanceToMesh(const FHitResult& HitResultFromPlayer) const;
 
 	// Gets a value clamped between 0 and 1 based on the thickness of the meshes between the player and the audio source
@@ -92,7 +103,8 @@ private:
 
 	void ResetAudioComponentOnNoBlock(UAudioComponent* AudioComponent);
 
-	void SetLowPassFilter(UAudioComponent* AudioComp, const TArray<FHitResult>& HitResultFromPlayer, const float OcclusionValue);
+	void SetLowPassFilter(UAudioComponent* AudioComp, const TArray<FHitResult>& HitResultFromPlayer) const;
 
-#pragma endregion 
+#pragma endregion
+	
 };

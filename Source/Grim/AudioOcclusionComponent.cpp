@@ -37,15 +37,16 @@ void UAudioOcclusionComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	//SetAudioComponents();
 
 	// Add to timer 
-	Timer += DeltaTime;
+	LowPassTimer += DeltaTime;
 
 	// Update all audio components 
 	for(UAudioComponent* Audio : AudioComponents)
 		UpdateAudioComp(Audio, DeltaTime);
 
-	// Check if timer exceeded delay after updating all audio comps 
-	if(Timer > LowPassUpdateDelay)
-		Timer = 0; 
+	// Check if timer exceeded delay after updating all audio comps. If so reset it. Audio Comps have already updated
+	// their low pass by now 
+	if(LowPassTimer > LowPassUpdateDelay)
+		LowPassTimer = 0;
 }
 
 void UAudioOcclusionComponent::AddAudioComponentToOcclusion(UAudioComponent* AudioComponent)
@@ -65,8 +66,8 @@ void UAudioOcclusionComponent::SetAudioComponents()
 	for(const auto Actor : AllFoundActors)
 	{
 		// TODO: ONLY FOR DEBUGGING TO REMOVE UNWANTED SOUNDS
-		 //if(!Actor->GetActorNameOrLabel().Equals("TestSound"))
-		 //	continue; 
+		 if(bOnlyUseDebugSound && !Actor->GetActorNameOrLabel().Equals("TestSound"))
+		 	continue; 
 		// If the actor has an audio component 
 		if(auto AudioComp = Actor->FindComponentByClass<UAudioComponent>())
 				AudioComponents.Add(AudioComp); // Add it to the array
@@ -89,13 +90,14 @@ void UAudioOcclusionComponent::UpdateAudioComp(UAudioComponent* AudioComp, const
 		return;
 	}
 
-	// Used to calculate distances that rays travel within objects 
+	// Used to calculate distances that rays travel within objects by also doing a line trace from the audio source
+	// resulting in a hit on both sides of the object 
 	TArray<FHitResult> HitResultsFromAudio;
 	DoLineTrace(HitResultsFromAudio, AudioComp->GetComponentLocation(), CameraComp->GetComponentLocation());
 	
 	if(HitResultsFromAudio.Num() != HitResultsFromPlayer.Num())
 	{
-		UE_LOG(LogTemp, Error, TEXT("Ray trace hits not equals for player and audio!, Audio: %i - Player: %i"), HitResultsFromAudio.Num(), HitResultsFromPlayer.Num())
+		UE_LOG(LogTemp, Error, TEXT("Ray trace hits not equal for player and audio!, Audio: %i - Player: %i"), HitResultsFromAudio.Num(), HitResultsFromPlayer.Num())
 		return; 
 	}
 
@@ -108,12 +110,14 @@ void UAudioOcclusionComponent::UpdateAudioComp(UAudioComponent* AudioComp, const
 		TotalOccValue += GetOcclusionValue(HitResultsFromPlayer[i], HitResultsFromAudio[i]); 
 	
 	TotalOccValue = FMath::Clamp(TotalOccValue, 0, 1); 
-	
+
+	// Subtract the volume multiplier with the total occlusion value to determine how low the sound should be, higher
+	// occlusion means lower volume 
 	AudioComp->SetVolumeMultiplier(1 - TotalOccValue);
 
 	// Update LowPass only at set interval for optimization 
-	if(Timer > LowPassUpdateDelay)
-		SetLowPassFilter(AudioComp, HitResultsFromPlayer, TotalOccValue);
+	if(LowPassTimer > LowPassUpdateDelay)
+		SetLowPassFilter(AudioComp, HitResultsFromPlayer);
 }
 
 float UAudioOcclusionComponent::GetOcclusionValue(const FHitResult& HitResultFromPlayer, const FHitResult& HitResultFromAudio) 
@@ -134,13 +138,14 @@ float UAudioOcclusionComponent::GetMaterialValue(const FHitResult& HitResult)
 	HitResult.GetComponent()->GetUsedMaterials(Materials);
 
 	float MaterialValue = 1; 
-	for(const auto Material : Materials)
+	for(const auto& Material : Materials)
 	{
 		// Get the material value if it has one 
 		if(MaterialOcclusionMap.Contains(Material))
 		{
 			MaterialValue = MaterialOcclusionMap[Material];
 			//UE_LOG(LogTemp, Warning, TEXT("Material value: %f"), MaterialValue)
+			break; // stop iterating, right material found 
 		}
 	}
 
@@ -154,9 +159,10 @@ float UAudioOcclusionComponent::GetLowPassValueBasedOnDistanceToMesh(const FHitR
 
 	const float DistanceFromPlayerToMeshPoint = FVector::Dist(ClosestPointOnMeshToPlayer, CameraComp->GetComponentLocation());
 
+	// Clamps Low Pass Value between 0 and the max distance, then divides by max distance to give a value between 0 and 1
 	const float LowPassValue = FMath::Clamp(DistanceFromPlayerToMeshPoint - DistanceToWallOffset, 0, DistanceToWallToStopAddingLowPass) / DistanceToWallToStopAddingLowPass;
 	
-	UE_LOG(LogTemp, Warning, TEXT("LowPassValue based on distance to wall: %f"), LowPassValue);
+	//UE_LOG(LogTemp, Warning, TEXT("LowPassValue based on distance to wall: %f"), LowPassValue);
 	
 	return LowPassValue;
 }
@@ -177,9 +183,9 @@ float UAudioOcclusionComponent::GetThicknessValue(const FHitResult& HitResultFro
 
 void UAudioOcclusionComponent::ResetAudioComponentOnNoBlock(UAudioComponent* AudioComponent)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Volume: 1"))
+	UE_LOG(LogTemp, Warning, TEXT("Volume: 1, Low Pass: Disabled"))
 
-	// Resets the audio comp values 
+	// Resets the audio comp values if they are not already reset 
 	if(AudioComponent->VolumeMultiplier != 1)
 		AudioComponent->SetVolumeMultiplier(1);
 
@@ -187,11 +193,15 @@ void UAudioOcclusionComponent::ResetAudioComponentOnNoBlock(UAudioComponent* Aud
 		AudioComponent->SetLowPassFilterEnabled(false);
 }
 
-void UAudioOcclusionComponent::SetLowPassFilter(UAudioComponent* AudioComp, const TArray<FHitResult>& HitResultFromPlayer, const float OcclusionValue)
+void UAudioOcclusionComponent::SetLowPassFilter(UAudioComponent* AudioComp, const TArray<FHitResult>& HitResultFromPlayer) const
 {
-	AudioComp->SetLowPassFilterEnabled(true);
-	float Frequency = MaxLowPassFrequency * GetLowPassValueBasedOnDistanceToMesh(HitResultFromPlayer[0]);
-	Frequency = FMath::Clamp(Frequency, 200, MaxLowPassFrequency);
+	// Enable low pass filter 
+	AudioComp->SetLowPassFilterEnabled(true); 
+
+	// Calculate what frequency to filter by, using the distance to the blocking wall 
+	float Frequency = MaxLowPassFrequency * GetLowPassValueBasedOnDistanceToMesh(HitResultFromPlayer[0]); 
+	// Clamp to ensure a min frequency of 200 and max of set variable 
+	Frequency = FMath::Clamp(Frequency, 200, MaxLowPassFrequency); 
 
 	AudioComp->SetLowPassFilterFrequency(Frequency);
 	
