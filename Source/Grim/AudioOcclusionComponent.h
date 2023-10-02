@@ -36,6 +36,9 @@ private:
 	// Array holding all audio components in the level 
 	TArray<UAudioComponent*> AudioComponents;
 
+	// Make sound propagation a friend so they can share the audio comp array (separate struct instead?) 
+	friend class USoundPropagationComponent; 
+
 	// The class that are checked to see if they have an audio component, default = all actors 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> ActorClassToSearchFor = AActor::StaticClass();

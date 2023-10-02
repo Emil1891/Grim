@@ -17,24 +17,29 @@ public:
 
 	FVector GetWorldCoordinate() const { return WorldCoordinate; }
 
-	int GetCost() const { return Cost; }
+	// Will be used to keep track of the path, where the previous/next node is 
+	GridNode* Parent = nullptr; 
 
-	void SetCost(const int NewCost) { Cost = NewCost; }
-
+	// Grid index(es) (the array)
 	int GridX = -1;
 	int GridY = -1;
-	int GridZ = -1; 
+	int GridZ = -1;
+
+	// costs 
+	int GCost = -1; // cost to get to the this node from start (or cost to start node)
+	int HCost = -1; // estimated cost to get to target from this node 
+
+	// F cost, sum of GCost and HCost 
+	int GetFCost() const { return GCost + HCost; }
+
+	// Overload < operator so class can be used in heaps. Priority order is lowest FCost, then lowest HCost 
+	bool operator<(const GridNode& OtherNode) const; 
 	
 private:
-	// Direction where the AI should walk if standing on this node 
-	FVector Direction = FVector::Zero();
 
 	// If the node is walkable 
 	bool bWalkable = false;
 
 	FVector WorldCoordinate;
-
-	// Cost to get to this node 
-	int Cost = INT_MAX;
-
+	
 };

@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GridNode.h"
-//#include "Pathfinder.h"
 #include "GameFramework/Actor.h"
 #include "MapGrid.generated.h"
 
@@ -32,6 +31,8 @@ public:
 	FVector GetGridBottomLeftLocation() const { return GridBottomLeftLocation; }
 
 	FVector GetGridSize() const { return GridSize; }
+	
+	TArray<GridNode*> GetNeighbours(const GridNode* Node) const;
 
 private:
 
@@ -67,9 +68,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> OverlapCheckActorClass;
 
-	//friend class Pathfinder; 
-	//Pathfinder* Pathfind = nullptr; 
-
 #pragma endregion 
 
 #pragma region Functions 
@@ -79,8 +77,6 @@ private:
 	void AddToArray(const int IndexX, const int IndexY, const int IndexZ, const GridNode Node);
 
 	GridNode* GetNodeFromArray(const int IndexX, const int IndexY, const int IndexZ) const;
-
-	TArray<GridNode*> GetNeighbours(const GridNode* Node) const;
 
 	int GetIndex(const int IndexX, const int IndexY, const int IndexZ) const;
 

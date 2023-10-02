@@ -39,9 +39,12 @@ void AMapGrid::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+	// TODO: I DONT THINK THIS CLASS HAS ANY REASON TO TICK, TURN IT OFF? MAP CHANGES SHOULD BE HANDLED ANY OTHER WAY
+	// THAN BUILDING THE GRID EACH FRAME. POSSIBLE TO ONLY UPDATE THE AFFECTED GRIDS? 
+
 	// TODO: REMOVE THIS, ONLY USED FOR MEASURING PERFORMANCE (not the function call) 
 	// FDateTime StartTime = FDateTime::UtcNow();
-	//Pathfind->UpdateNodeDirections();
+	// Pathfind->UpdateNodeDirections();
 	// const float TimeElapsedInMs = (FDateTime::UtcNow() - StartTime).GetTotalMilliseconds();
 	// UE_LOG(LogTemp, Display, TEXT("%f ms each tick to update map"), TimeElapsedInMs)
 	
@@ -128,18 +131,17 @@ GridNode* AMapGrid::GetNodeFromArray(const int IndexX, const int IndexY, const i
 GridNode* AMapGrid::GetNodeFromWorldLocation(const FVector WorldLoc) const
 {
 	// Get coordinates relative to the grid's bottom left corner 
-	//const float GridRelativeX = WorldLoc.X - GridBottomLeftLocation.X;  
-	//const float GridRelativeY = WorldLoc.Y - GridBottomLeftLocation.Y;
-	//const float GridRelativeZ = WorldLoc.Z - GridBottomLeftLocation.Z;
-
-	const FVector GridRelative = WorldLoc - GridBottomLeftLocation; 
-
+	FVector GridRelative = WorldLoc - GridBottomLeftLocation;
+	
 	// checks how many nodes "fit" in the relative position for array indexes 
-	const int x = FMath::Clamp(FMath::RoundToInt((GridRelative.X - NodeRadius) / NodeDiameter), 0, GridArrayLengthX - 1);
-	const int y = FMath::Clamp(FMath::RoundToInt((GridRelative.Y - NodeRadius) / NodeDiameter), 0, GridArrayLengthY - 1);
-	const int z = FMath::Clamp(FMath::RoundToInt((GridRelative.Z - NodeRadius) / NodeDiameter), 0, GridArrayLengthZ - 1); 
+	GridRelative = (GridRelative - NodeRadius) / NodeDiameter;
 
-	return GetNodeFromArray(x, y, z);
+	// Clamp the result between array index bounds 
+	const int x = FMath::Clamp(FMath::RoundToInt(GridRelative.X), 0, GridArrayLengthX - 1); 
+	const int y = FMath::Clamp(FMath::RoundToInt(GridRelative.Y), 0, GridArrayLengthY - 1); 
+	const int z = FMath::Clamp(FMath::RoundToInt(GridRelative.Z), 0, GridArrayLengthZ - 1); 
+
+	return GetNodeFromArray(x, y, z); 
 }
 
 TArray<GridNode*> AMapGrid::GetNeighbours(const GridNode* Node) const
