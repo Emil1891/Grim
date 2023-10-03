@@ -32,5 +32,5 @@ private:
 
 	void UpdateSoundPropagation(UAudioComponent* AudioComp);
 
-	class Pathfinder* Pathfind = nullptr;
+	class FPathfinder* Pathfinder = nullptr;
 };

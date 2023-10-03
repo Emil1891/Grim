@@ -24,7 +24,11 @@ void USoundPropagationComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Pathfind = new Pathfinder(Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass()))); 
+	AudioOccComp = GetOwner()->FindComponentByClass<UAudioOcclusionComponent>();
+	if(!AudioOccComp)
+		UE_LOG(LogTemp, Error, TEXT("No audio occlusion component added to player"))
+	
+	Pathfinder = new FPathfinder(Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass())));
 }
 
 // Called every frame
@@ -43,34 +47,27 @@ void USoundPropagationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 // TODO: DONT PLAY SOUND AT ALL IF EXCEEDING AN EVEN GREATER LENGTH? 
 void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioComp)
 {
-	TArray<GridNode*> Path; 
-	if(!Pathfind->FindPath(AudioComp->GetComponentLocation(), GetOwner()->GetActorLocation(), Path))
+	auto StartTime = FDateTime::Now().GetMillisecond(); 
+	TArray<FGridNode*> Path; 
+	if(!Pathfinder->FindPath(AudioComp->GetComponentLocation(), GetOwner()->GetActorLocation(), Path))
 	{
 		// NO PATH FOUND, REMOVE EVENTUAL PROPAGATED SOUND (RESET EVERYTHING)
 		return; 
 	}
 
-	// Path found, find where audio should be coming from
-
-	// Get the direction between first and second node in path 
-	FVector DirectionToNextNode = Path[0]->GetWorldCoordinate() - Path[1]->GetWorldCoordinate();
-	DirectionToNextNode.Normalize();
-
-	// What we are after is the coord where direction changes to place the audio source at that location, default at
-	// last coordinate 
-	FVector CoordinateWhereDirChanges = Path[Path.Num() - 1]->GetWorldCoordinate();  
+	// Path found, find where audio should be coming from (which is probably the last node in the path that has direct
+	// line of sight to player)
 
 	// Iterate through path 
 	for(int i = 1; i < Path.Num() - 1; i++)
 	{
-		// If direction to next node is not the same, then set where direction changed and break loop 
-		if(!(Path[i]->GetWorldCoordinate() - Path[i + 1]->GetWorldCoordinate().GetSafeNormal()).Equals(CoordinateWhereDirChanges))
-		{
-			CoordinateWhereDirChanges = Path[i]->GetWorldCoordinate();
-			break; 
-		}
+		// TODO: FIND THE LAST NODE WITH LINE OF SIGHT TO PLAYER, THAT'S THE LOCATION TO PROPAGATE THE SOUND TO
+
+		// Drawing the path 
+		DrawDebugSphere(GetWorld(), Path[i]->GetWorldCoordinate(), 30, 10, FColor::Red);
 	}
 
-	// Debug where direction change occurs 
-	DrawDebugSphere(GetWorld(), CoordinateWhereDirChanges, 50, 10, FColor::Red); 
+	auto EndTime = FDateTime::Now().GetMillisecond();
+	if(EndTime - StartTime != 0)
+		UE_LOG(LogTemp, Warning, TEXT("Update time: %i ms"), EndTime - StartTime)
 }

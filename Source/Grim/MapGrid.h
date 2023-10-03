@@ -26,13 +26,17 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	// Returns the node that the World Location is in 
-	GridNode* GetNodeFromWorldLocation(const FVector WorldLoc) const;
+	FGridNode* GetNodeFromWorldLocation(const FVector WorldLoc) const;
 	
 	FVector GetGridBottomLeftLocation() const { return GridBottomLeftLocation; }
 
 	FVector GetGridSize() const { return GridSize; }
 	
-	TArray<GridNode*> GetNeighbours(const GridNode* Node) const;
+	TArray<FGridNode*> GetNeighbours(const FGridNode* Node) const;
+
+	// Temporary bool to know if to draw path, will be removed 
+	UPROPERTY(EditAnywhere)
+	bool bDrawPath = true; 
 
 private:
 
@@ -41,7 +45,7 @@ private:
 	// 1D array (will be used as if it was 3D) keeping track of all nodes,
 	// Unreal does not seem to like creating 3D arrays with Array[][][]
 	// https://stackoverflow.com/a/34363187 (source to convert 3D array to 1D) 
-	GridNode* Nodes; 
+	FGridNode* Nodes; 
 
 	// Radius for each node, smaller radius means more accurate but more performance expensive 
 	UPROPERTY(EditAnywhere)
@@ -74,9 +78,9 @@ private:
 
 	void CreateGrid();
 
-	void AddToArray(const int IndexX, const int IndexY, const int IndexZ, const GridNode Node);
+	void AddToArray(const int IndexX, const int IndexY, const int IndexZ, const FGridNode Node);
 
-	GridNode* GetNodeFromArray(const int IndexX, const int IndexY, const int IndexZ) const;
+	FGridNode* GetNodeFromArray(const int IndexX, const int IndexY, const int IndexZ) const;
 
 	int GetIndex(const int IndexX, const int IndexY, const int IndexZ) const;
 

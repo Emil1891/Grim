@@ -7,20 +7,23 @@
 /**
  * 
  */
-class GRIM_API Pathfinder
+class GRIM_API FPathfinder
 {
 public:
-	explicit Pathfinder(class AMapGrid* Grid);
+	explicit FPathfinder(class AMapGrid* Grid);
 
-	bool FindPath(const FVector& From, const FVector& To, TArray<class GridNode*>& Path); 
+	bool FindPath(const FVector& From, const FVector& To, TArray<class FGridNode*>& Path); 
 	
-	~Pathfinder();
+	~FPathfinder();
 
 private:
 	AMapGrid* Grid;
 
-	GridNode* OldGridNode = nullptr;
+	FGridNode* OldEndNode = nullptr;
 
-	TArray<GridNode*> GetPath(const GridNode* StartNode, GridNode* EndNode); 
+	TArray<FGridNode*> GetPath(const FGridNode* StartNode, FGridNode* EndNode);
+
+	// Returns an approximate cost to travel between nodes (ignoring obstacles)
+	int GetCostToNode(const FGridNode* From, const FGridNode* To) const; 
 
 };

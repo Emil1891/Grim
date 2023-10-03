@@ -7,18 +7,18 @@
 /**
  * 
  */
-class GRIM_API GridNode
+class GRIM_API FGridNode
 {
 public:
-	GridNode(const bool bIsWalkable, const FVector WorldCoord, const int GridX, const int GridY, const int GridZ);
-	GridNode() {} 
+	FGridNode(const bool bIsWalkable, const FVector WorldCoord, const int GridX, const int GridY, const int GridZ);
+	FGridNode() {} 
 
 	bool IsWalkable() const { return bWalkable; }
 
 	FVector GetWorldCoordinate() const { return WorldCoordinate; }
 
 	// Will be used to keep track of the path, where the previous/next node is 
-	GridNode* Parent = nullptr; 
+	FGridNode* Parent = nullptr; 
 
 	// Grid index(es) (the array)
 	int GridX = -1;
@@ -31,9 +31,6 @@ public:
 
 	// F cost, sum of GCost and HCost 
 	int GetFCost() const { return GCost + HCost; }
-
-	// Overload < operator so class can be used in heaps. Priority order is lowest FCost, then lowest HCost 
-	bool operator<(const GridNode& OtherNode) const; 
 	
 private:
 

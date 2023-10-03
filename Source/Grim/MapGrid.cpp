@@ -31,8 +31,6 @@ void AMapGrid::BeginPlay()
 	
 	if(bDrawDebugStuff) 
 		DrawDebugStuff();
-
-	//Pathfind = new Pathfinder(UGameplayStatics::GetPlayerPawn(this, 0), this);
 }
 
 void AMapGrid::Tick(float DeltaSeconds)
@@ -40,13 +38,7 @@ void AMapGrid::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	// TODO: I DONT THINK THIS CLASS HAS ANY REASON TO TICK, TURN IT OFF? MAP CHANGES SHOULD BE HANDLED ANY OTHER WAY
-	// THAN BUILDING THE GRID EACH FRAME. POSSIBLE TO ONLY UPDATE THE AFFECTED GRIDS? 
-
-	// TODO: REMOVE THIS, ONLY USED FOR MEASURING PERFORMANCE (not the function call) 
-	// FDateTime StartTime = FDateTime::UtcNow();
-	// Pathfind->UpdateNodeDirections();
-	// const float TimeElapsedInMs = (FDateTime::UtcNow() - StartTime).GetTotalMilliseconds();
-	// UE_LOG(LogTemp, Display, TEXT("%f ms each tick to update map"), TimeElapsedInMs)
+	// TODO: THAN BUILDING THE GRID EACH FRAME. POSSIBLE TO ONLY UPDATE THE AFFECTED GRIDS? 
 	
 	if(!bDrawDebugStuff)
 		return;
@@ -67,7 +59,7 @@ void AMapGrid::CreateGrid()
 	GridArrayLengthY = FMath::RoundToInt(GridSize.Y / NodeDiameter); 
 	GridArrayLengthZ = FMath::RoundToInt(GridSize.Z / NodeDiameter); 
 
-	Nodes = new GridNode[GridArrayLengthX * GridArrayLengthY * GridArrayLengthZ]; 
+	Nodes = new FGridNode[GridArrayLengthX * GridArrayLengthY * GridArrayLengthZ]; 
 
 	// The grid's pivot is in the center, need its position as if pivot was in the bottom left corner 
 	FVector GridBottomLeft = GetActorLocation();
@@ -106,7 +98,7 @@ void AMapGrid::CreateGrid()
 				OverlapActor->SetActorLocation(NodePos);
 				OverlapActor->GetOverlappingActors(OverlappingActors);
 
-				AddToArray(x, y, z, GridNode(OverlappingActors.IsEmpty(), NodePos, x, y, z));
+				AddToArray(x, y, z, FGridNode(OverlappingActors.IsEmpty(), NodePos, x, y, z));
 			}
 		}
 	}
@@ -115,20 +107,21 @@ void AMapGrid::CreateGrid()
 
 int AMapGrid::GetIndex (const int IndexX, const int IndexY, const int IndexZ) const
 {
-	return IndexX * GridArrayLengthY * GridArrayLengthZ + IndexZ * GridArrayLengthY + IndexY; // Source: https://stackoverflow.com/a/34363187 (reworked)
+	// Source: https://stackoverflow.com/a/34363187 (reworked) 
+	return IndexX * GridArrayLengthY * GridArrayLengthZ + IndexZ * GridArrayLengthY + IndexY; 
 }
 
-void AMapGrid::AddToArray(const int IndexX, const int IndexY, const int IndexZ, const GridNode Node)
+void AMapGrid::AddToArray(const int IndexX, const int IndexY, const int IndexZ, const FGridNode Node)
 {
 	Nodes[GetIndex(IndexX, IndexY, IndexZ)] = Node;
 }
 
-GridNode* AMapGrid::GetNodeFromArray(const int IndexX, const int IndexY, const int IndexZ) const
+FGridNode* AMapGrid::GetNodeFromArray(const int IndexX, const int IndexY, const int IndexZ) const
 {
 	return &Nodes[GetIndex(IndexX, IndexY, IndexZ)]; 
 }
 
-GridNode* AMapGrid::GetNodeFromWorldLocation(const FVector WorldLoc) const
+FGridNode* AMapGrid::GetNodeFromWorldLocation(const FVector WorldLoc) const
 {
 	// Get coordinates relative to the grid's bottom left corner 
 	FVector GridRelative = WorldLoc - GridBottomLeftLocation;
@@ -144,9 +137,9 @@ GridNode* AMapGrid::GetNodeFromWorldLocation(const FVector WorldLoc) const
 	return GetNodeFromArray(x, y, z); 
 }
 
-TArray<GridNode*> AMapGrid::GetNeighbours(const GridNode* Node) const
+TArray<FGridNode*> AMapGrid::GetNeighbours(const FGridNode* Node) const
 {
-	TArray<GridNode*> Neighbours;
+	TArray<FGridNode*> Neighbours;
 
 	// -1 to plus 1 in each direction to get every neighbour node 
 	for(int x = -1; x <= 1; x++)
@@ -192,7 +185,7 @@ void AMapGrid::DrawDebugStuff() const
 		{
 			for(int z = 0; z < GridArrayLengthZ; z++)
 			{
-				const GridNode* Node = GetNodeFromArray(x, y, z);
+				const FGridNode* Node = GetNodeFromArray(x, y, z);
 				FColor Color = Node->IsWalkable() ? FColor::Green : FColor::Red; 
 				DrawDebugBox(GetWorld(), Node->GetWorldCoordinate(), FVector(NodeRadius, NodeRadius, 1), Color, true);
 			}
