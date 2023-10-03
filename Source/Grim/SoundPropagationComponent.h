@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Components/AudioComponent.h"
 #include "SoundPropagationComponent.generated.h"
 
 
@@ -33,4 +34,18 @@ private:
 	void UpdateSoundPropagation(UAudioComponent* AudioComp);
 
 	class FPathfinder* Pathfinder = nullptr;
+
+	// Map containing the original audio component and the spawned, propagated audio component
+	UPROPERTY()
+	TMap<UAudioComponent*, UAudioComponent*> PropagatedSounds;
+
+	bool DoLineTrace(FHitResult& HitResultOut, const FVector& StartLoc, const TArray<AActor*>& ActorsToIgnore) const;
+
+	void RemovePropagatedSound(const UAudioComponent* AudioComp);
+
+	void SpawnPropagatedSound(UAudioComponent* AudioComp, const FVector& SpawnLocation);
+
+	UPROPERTY(EditAnywhere)
+	USoundAttenuation* PropagatedSoundAttenuation = nullptr;  
+
 };

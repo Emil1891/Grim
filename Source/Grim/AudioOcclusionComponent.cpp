@@ -205,5 +205,5 @@ void UAudioOcclusionComponent::SetLowPassFilter(UAudioComponent* AudioComp, cons
 
 	AudioComp->SetLowPassFilterFrequency(Frequency);
 	
-	UE_LOG(LogTemp, Warning, TEXT("Volume: %f Frequency: %f"), AudioComp->VolumeMultiplier, Frequency); 
+	// UE_LOG(LogTemp, Warning, TEXT("Volume: %f Frequency: %f"), AudioComp->VolumeMultiplier, Frequency); 
 }

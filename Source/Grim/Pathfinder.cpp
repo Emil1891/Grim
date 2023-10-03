@@ -109,8 +109,10 @@ TArray<FGridNode*> FPathfinder::GetPath(const FGridNode* StartNode, FGridNode* E
 		Current = Current->Parent; 
 	}
 
-	// Reverse the path since we constructed it "backwards" 
-	Algo::Reverse(Path); 
+	// Reverse the path since we constructed it "backwards". Note below: 
+	// Since we want to search the path from the audio source but later handle it as if it is from the player.
+	// It works out perfectly for us with not reversing it 
+	//Algo::Reverse(Path);
 
 	return Path; 
 }
