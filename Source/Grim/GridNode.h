@@ -20,7 +20,7 @@ public:
 	// Will be used to keep track of the path, where the previous/next node is 
 	FGridNode* Parent = nullptr; 
 
-	// Grid index(es) (the array)
+	// Grid index(es) (the array), can prob be made private and have getters 
 	int GridX = -1;
 	int GridY = -1;
 	int GridZ = -1;

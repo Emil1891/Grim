@@ -31,7 +31,7 @@ private:
 	UPROPERTY()
 	class UAudioOcclusionComponent* AudioOccComp; 
 
-	void UpdateSoundPropagation(UAudioComponent* AudioComp);
+	void UpdateSoundPropagation(UAudioComponent* AudioComp, const float DeltaTime);
 
 	class FPathfinder* Pathfinder = nullptr;
 
@@ -43,9 +43,24 @@ private:
 
 	void RemovePropagatedSound(const UAudioComponent* AudioComp);
 
-	void SpawnPropagatedSound(UAudioComponent* AudioComp, const FVector& SpawnLocation);
+	void SpawnPropagatedSound(UAudioComponent* AudioComp, const FVector& SpawnLocation, const int PathSize);
 
+	// Returns the volume multiplier that the propagated audio source should have based on length from the original
+	// source to the propagated audio source 
+	float GetPropagatedSoundVolume(const UAudioComponent* AudioComp, const int PathLength);
+
+	void MovePropagatedAudioComp(UAudioComponent* PropAudioComp, const class FGridNode* ToNode, const float DeltaTime) const; 
+
+	// Which sound attenuation that the propagated sound should use 
 	UPROPERTY(EditAnywhere)
-	USoundAttenuation* PropagatedSoundAttenuation = nullptr;  
+	USoundAttenuation* PropagatedSoundAttenuation = nullptr;
+
+	// How fast the propagated sound should move when its location changes, interpolates so the change is not instant
+	// which would cause a too abrupt switch 
+	UPROPERTY(EditAnywhere)
+	float PropagateLerpSpeed = 3500.f;
+
+	// Used to determine distance between propagated sound and the original sound source which will determine volume 
+	float GridNodeDiameter; 
 
 };

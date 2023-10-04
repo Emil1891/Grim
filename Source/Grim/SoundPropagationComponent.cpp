@@ -9,6 +9,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values for this component's properties
 USoundPropagationComponent::USoundPropagationComponent()
@@ -29,7 +30,11 @@ void USoundPropagationComponent::BeginPlay()
 	if(!AudioOccComp) // Sound propagation should prob have its own array of audio comps so you dont have to have both 
 		UE_LOG(LogTemp, Error, TEXT("No audio occlusion component added to player"))
 	
-	Pathfinder = new FPathfinder(Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass())));
+	const auto Grid = Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass()));
+
+	GridNodeDiameter = Grid->GetNodeDiameter(); 
+	
+	Pathfinder = new FPathfinder(Grid); 
 }
 
 // Called every frame
@@ -39,12 +44,12 @@ void USoundPropagationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 
 	// Update each audio component's sound propagation 
 	for(const auto& AudioComp : AudioOccComp->AudioComponents) 
-		UpdateSoundPropagation(AudioComp); 
+		UpdateSoundPropagation(AudioComp, DeltaTime); 
 }
 
 // TODO: TAKE LENGTH INTO ACCOUNT? IF PATH > LENGTH THEN DONT PROPAGATE SOUND?
 // TODO: DONT PLAY SOUND AT ALL IF EXCEEDING AN EVEN GREATER LENGTH? 
-void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioComp)
+void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioComp, const float DeltaTime)
 {
 	const auto StartTime = FDateTime::Now().GetMillisecond(); // FOR DEBUGGING
 	
@@ -82,31 +87,33 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 
 		// If nothing is blocking from the node to player, check next node 
 		if(!HitResult.bBlockingHit)
-			continue;
-
-		// Something is blocking between this node and the player 
+			continue; 
 		
 		// if we do not have a propagated sound for that audio comp in the world already 
 		if(!PropagatedSounds.Contains(AudioComp))
 		{
-			SpawnPropagatedSound(AudioComp, Path[i - 1]->GetWorldCoordinate()); 
+			SpawnPropagatedSound(AudioComp, Path[i - 1]->GetWorldCoordinate(), Path.Num()); 
 		} else  // If we do have a propagated sound for that location 
 		{
 			// Get the propagated audio component 
-			const UAudioComponent* PropagatedAudioComp = PropagatedSounds[AudioComp];
+			UAudioComponent* PropagatedAudioComp = PropagatedSounds[AudioComp];
 
-			// if it's in the wrong location, set it to the node's position, otherwise it's in the correct place already 
+			// if it's in the wrong location, lerp it to the correct location to prevent abrupt direction changes,
+			// otherwise it's in the correct place already so we dont have to do anything 
 			if(!PropagatedAudioComp->GetComponentLocation().Equals(Path[i - 1]->GetWorldCoordinate()))
-				PropagatedSounds[AudioComp]->SetWorldLocation(Path[i - 1]->GetWorldCoordinate()); 
+			{
+				MovePropagatedAudioComp(PropagatedAudioComp, Path[i - 1], DeltaTime);
+				// Volume also needs to change when updating 
+				PropagatedAudioComp->SetVolumeMultiplier(GetPropagatedSoundVolume(AudioComp, Path.Num()));
+			}
 		}
-
 		break; // Found the node with block 
 	}
 
 	// DEBUGGING 
 	const auto EndTime = FDateTime::Now().GetMillisecond();
-	if(EndTime - StartTime != 0)
-		UE_LOG(LogTemp, Warning, TEXT("Update time: %i ms"), EndTime - StartTime)
+	//if(EndTime - StartTime != 0)
+	//	UE_LOG(LogTemp, Warning, TEXT("Update time: %i ms"), EndTime - StartTime)
 }
 
 bool USoundPropagationComponent::DoLineTrace(FHitResult& HitResultOut, const FVector& StartLoc, const TArray<AActor*>& ActorsToIgnore) const
@@ -127,7 +134,7 @@ void USoundPropagationComponent::RemovePropagatedSound(const UAudioComponent* Au
 	}
 }
 
-void USoundPropagationComponent::SpawnPropagatedSound(UAudioComponent* AudioComp, const FVector& SpawnLocation) 
+void USoundPropagationComponent::SpawnPropagatedSound(UAudioComponent* AudioComp, const FVector& SpawnLocation, const int PathSize) 
 {
 	// I now duplicate the object giving it the exact same properties, that might not be what we want since we
 	// dont want the muffling, different volume and so forth 
@@ -138,8 +145,8 @@ void USoundPropagationComponent::SpawnPropagatedSound(UAudioComponent* AudioComp
 	PropagatedAudioComp->SetWorldLocation(SpawnLocation);
 	
 	// I guess I can copy it and then only change what we want to differ? 
-	// Does not seem to update, needs to be delayed 1 tick so it can register first? 
-	PropagatedAudioComp->SetVolumeMultiplier(1); 
+	// Does not seem to update, needs to be delayed 1 tick so it can register first? Does update now? 
+	PropagatedAudioComp->SetVolumeMultiplier(GetPropagatedSoundVolume(AudioComp, PathSize)); 
 	PropagatedAudioComp->SetLowPassFilterEnabled(false);
 	// PropagatedAudioComp->AttenuationSettings = PropagatedSoundAttenuation; // Do we want to change attenuation?
 
@@ -147,4 +154,31 @@ void USoundPropagationComponent::SpawnPropagatedSound(UAudioComponent* AudioComp
 	// TODO: component needs the original source's location though 
 	
 	PropagatedSounds.Add(AudioComp, PropagatedAudioComp); 
+}
+
+void USoundPropagationComponent::MovePropagatedAudioComp(UAudioComponent* PropAudioComp, const FGridNode* ToNode, const float DeltaTime) const
+{
+	// Moves the Propagated audio component to its correct location 
+	const FVector CurrentLoc = PropAudioComp->GetComponentLocation();
+	const FVector TargetLoc = ToNode->GetWorldCoordinate(); 
+	const FVector InterpolatedLoc = UKismetMathLibrary::VInterpTo_Constant(CurrentLoc, TargetLoc, DeltaTime, PropagateLerpSpeed); 
+	PropAudioComp->SetWorldLocation(InterpolatedLoc);
+}
+
+float USoundPropagationComponent::GetPropagatedSoundVolume(const UAudioComponent* AudioComp, const int PathLength)
+{
+	// NOTE: IF WE USE DIFFERENT ATTENUATION LATER FOR THE PROPAGATED SOUND, THEN WE NEED THAT AUDIO COMP INSTEAD OF
+	// THE ORIGINAL 
+	const float FalloffDistance = AudioComp->AttenuationSettings->Attenuation.GetMaxFalloffDistance();
+
+	// This is an approximation that assumes each node traveled is the same length (diagonal travels are longer)
+	const int DistanceFromPropToOriginal = PathLength * GridNodeDiameter; 
+
+	// Calculates the volume by seeing how much percentage the distance from the source is of the max fall off distance
+	// giving a value close to 0 when it's close to the audio source and vice versa. That's why 1 - Value is needed 
+	const float NewVolume = 1 - FMath::Clamp(DistanceFromPropToOriginal / FalloffDistance, 0, 1);
+
+	UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
+
+	return NewVolume; 
 }

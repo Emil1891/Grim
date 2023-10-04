@@ -89,7 +89,7 @@ private:
 	void SetAudioComponents();
 
 	// Helper func to do line trace 
-	bool DoLineTrace(TArray<FHitResult>& HitResultsOut, const FVector& StartLocation, const FVector& EndLocation) const;
+	bool DoLineTrace(TArray<FHitResult>& HitResultsOut, const FVector& StartLocation, const FVector& EndLocation, const TArray<AActor*>& ActorsToIgnore) const;
 	
 	void UpdateAudioComp(UAudioComponent* AudioComp, const float DeltaTime);
 

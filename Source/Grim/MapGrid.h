@@ -36,7 +36,9 @@ public:
 
 	// Temporary bool to know if to draw path, will be removed 
 	UPROPERTY(EditAnywhere)
-	bool bDrawPath = true; 
+	bool bDrawPath = true;
+
+	float GetNodeDiameter() const { return NodeDiameter; }
 
 private:
 

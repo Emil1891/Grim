@@ -74,16 +74,18 @@ void UAudioOcclusionComponent::SetAudioComponents()
 	}
 }
 
-bool UAudioOcclusionComponent::DoLineTrace(TArray<FHitResult>& HitResultsOut, const FVector& StartLocation, const FVector& EndLocation) const
+bool UAudioOcclusionComponent::DoLineTrace(TArray<FHitResult>& HitResultsOut, const FVector& StartLocation, const FVector& EndLocation, const TArray<AActor*>& ActorsToIgnore) const
 {
-	return UKismetSystemLibrary::LineTraceMultiForObjects(GetWorld(), StartLocation, EndLocation, ObjectsToQuery, false, TArray<AActor*>(), EDrawDebugTrace::ForOneFrame, HitResultsOut, true); 
+	return UKismetSystemLibrary::LineTraceMultiForObjects(GetWorld(), StartLocation, EndLocation, ObjectsToQuery, false, ActorsToIgnore, EDrawDebugTrace::ForOneFrame, HitResultsOut, true); 
 }
 
 void UAudioOcclusionComponent::UpdateAudioComp(UAudioComponent* AudioComp, const float DeltaTime)
 {
+	const TArray<AActor*> ActorsToIgnoreInLineTrace {GetOwner(), AudioComp->GetOwner() }; 
+	
 	TArray<FHitResult> HitResultsFromPlayer;
 	// No blocking objects 
-	if(!DoLineTrace(HitResultsFromPlayer, CameraComp->GetComponentLocation(), AudioComp->GetComponentLocation()))
+	if(!DoLineTrace(HitResultsFromPlayer, CameraComp->GetComponentLocation(), AudioComp->GetComponentLocation(), ActorsToIgnoreInLineTrace))
 	{
 		// Reset values when not blocking 
 		ResetAudioComponentOnNoBlock(AudioComp); 
@@ -93,7 +95,7 @@ void UAudioOcclusionComponent::UpdateAudioComp(UAudioComponent* AudioComp, const
 	// Used to calculate distances that rays travel within objects by also doing a line trace from the audio source
 	// resulting in a hit on both sides of the object 
 	TArray<FHitResult> HitResultsFromAudio;
-	DoLineTrace(HitResultsFromAudio, AudioComp->GetComponentLocation(), CameraComp->GetComponentLocation());
+	DoLineTrace(HitResultsFromAudio, AudioComp->GetComponentLocation(), CameraComp->GetComponentLocation(), ActorsToIgnoreInLineTrace);
 	
 	if(HitResultsFromAudio.Num() != HitResultsFromPlayer.Num())
 	{
