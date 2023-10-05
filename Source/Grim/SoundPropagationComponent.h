@@ -47,7 +47,7 @@ private:
 
 	// Returns the volume multiplier that the propagated audio source should have based on length from the original
 	// source to the propagated audio source 
-	float GetPropagatedSoundVolume(const UAudioComponent* AudioComp, const int PathLength);
+	float GetPropagatedSoundVolume(const UAudioComponent* AudioComp, const int PathSize) const;
 
 	void MovePropagatedAudioComp(UAudioComponent* PropAudioComp, const class FGridNode* ToNode, const float DeltaTime) const; 
 
@@ -67,4 +67,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	bool bEnabled = false; 
 
+	UPROPERTY()
+	class UAudioPlayTimes* AudioPlayTimes;
+
+	UPROPERTY(EditAnywhere)
+	float VolumeOffset = -0.3f; 
 };

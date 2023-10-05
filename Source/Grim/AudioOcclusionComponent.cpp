@@ -4,6 +4,7 @@
 #include "AudioOcclusionComponent.h"
 
 #include "AITypes.h"
+#include "AudioPlayTimes.h"
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -32,7 +33,9 @@ void UAudioOcclusionComponent::BeginPlay()
 	
 	SetAudioComponents();
 
-	CameraComp = GetOwner()->FindComponentByClass<UCameraComponent>(); 
+	CameraComp = GetOwner()->FindComponentByClass<UCameraComponent>();
+
+	GetOwner()->FindComponentByClass<UAudioPlayTimes>()->SetPlayTimes(AudioComponents); 
 }
 
 // Called every frame

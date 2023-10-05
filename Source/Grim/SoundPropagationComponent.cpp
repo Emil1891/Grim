@@ -4,6 +4,7 @@
 #include "SoundPropagationComponent.h"
 
 #include "AudioOcclusionComponent.h"
+#include "AudioPlayTimes.h"
 #include "MapGrid.h"
 #include "Pathfinder.h"
 #include "Camera/CameraComponent.h"
@@ -41,7 +42,9 @@ void USoundPropagationComponent::BeginPlay()
 
 	GridNodeDiameter = Grid->GetNodeDiameter(); 
 	
-	Pathfinder = new FPathfinder(Grid); 
+	Pathfinder = new FPathfinder(Grid);
+
+	AudioPlayTimes = GetOwner()->FindComponentByClass<UAudioPlayTimes>();
 }
 
 // Called every frame
@@ -160,8 +163,9 @@ void USoundPropagationComponent::SpawnPropagatedSound(UAudioComponent* AudioComp
 	PropagatedAudioComp->SetLowPassFilterEnabled(false);
 	// PropagatedAudioComp->AttenuationSettings = PropagatedSoundAttenuation; // Do we want to change attenuation?
 
-	// TODO: THE SPAWNED AUDIO COMP PLAYS FROM START, FIX! Not possible? Move the original source? Audio Occlusion
-	// TODO: component needs the original source's location though 
+	// Plays the propagated audio source at the correct start time to keep it in sync with the original
+	const float PlayTime = AudioPlayTimes->GetPlayTime(AudioComp); 
+	PropagatedAudioComp->Play(PlayTime); 
 	
 	PropagatedSounds.Add(AudioComp, PropagatedAudioComp); 
 }
@@ -175,20 +179,20 @@ void USoundPropagationComponent::MovePropagatedAudioComp(UAudioComponent* PropAu
 	PropAudioComp->SetWorldLocation(InterpolatedLoc);
 }
 
-float USoundPropagationComponent::GetPropagatedSoundVolume(const UAudioComponent* AudioComp, const int PathLength)
+float USoundPropagationComponent::GetPropagatedSoundVolume(const UAudioComponent* AudioComp, const int PathSize) const
 {
 	// NOTE: IF WE USE DIFFERENT ATTENUATION LATER FOR THE PROPAGATED SOUND, THEN WE NEED THAT AUDIO COMP INSTEAD OF
 	// THE ORIGINAL 
 	const float FalloffDistance = AudioComp->AttenuationSettings->Attenuation.GetMaxFalloffDistance();
 
 	// This is an approximation that assumes each node traveled is the same length (diagonal travels are longer)
-	const int DistanceFromPropToOriginal = PathLength * GridNodeDiameter; 
+	const int DistanceFromPropToOriginal = PathSize * GridNodeDiameter; 
 
 	// Calculates the volume by seeing how much percentage the distance from the source is of the max fall off distance
 	// giving a value close to 0 when it's close to the audio source and vice versa. That's why 1 - Value is needed 
 	const float NewVolume = 1 - FMath::Clamp(DistanceFromPropToOriginal / FalloffDistance, 0, 1);
 
-	UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
+	//UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
 
-	return NewVolume; 
+	return NewVolume + VolumeOffset; 
 }
