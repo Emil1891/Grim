@@ -19,7 +19,7 @@ AInteractableAudioPlayer::AInteractableAudioPlayer()
 
 void AInteractableAudioPlayer::InteractSuccessful()
 {
-	// So interacting again does not reset audio ot fire event 
+	// So interacting again does not reset audio or fire event 
 	if(AudioPlayer->IsPlaying())
 		return; 
 	

@@ -17,7 +17,10 @@ class GRIM_API AInteractableAudioPlayer : public AInteractableObject
 public:
 	AInteractableAudioPlayer();
 
+	UAudioComponent* GetAudioComponent() const { return AudioPlayer; }
+
 protected:
+	
 	virtual void InteractSuccessful() override;
 	
 	// Audio component playing the sound 

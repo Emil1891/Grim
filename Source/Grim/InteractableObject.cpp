@@ -3,6 +3,7 @@
 
 #include "InteractableObject.h"
 
+#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -16,8 +17,12 @@ AInteractableObject::AInteractableObject()
 
 	// bind functions for when player enters/exits the trigger zone
 	TriggerZone->OnComponentBeginOverlap.AddDynamic(this, &AInteractableObject::TriggerZoneEntered);
-	TriggerZone->OnComponentEndOverlap.AddDynamic(this, &AInteractableObject::TriggerZoneExited); 
+	TriggerZone->OnComponentEndOverlap.AddDynamic(this, &AInteractableObject::TriggerZoneExited);
 
+	// Create the audio player that will play the interact looping sound 
+	InteractAudioPlayer = CreateDefaultSubobject<UAudioComponent>(TEXT("InteractAudioPlayer")); 
+	InteractAudioPlayer->SetupAttachment(RootComponent);
+	InteractAudioPlayer->bAutoActivate = false;
 }
 
 // Called when the game starts or when spawned
@@ -32,7 +37,9 @@ void AInteractableObject::BeginPlay()
 	
 	EnableInput(PlayerController);
 
-	PlayerController->InputComponent->BindAction(TEXT("Interact"), EInputEvent::IE_Pressed, this, &AInteractableObject::PlayerInteracted); 
+	PlayerController->InputComponent->BindAction(TEXT("Interact"), EInputEvent::IE_Pressed, this, &AInteractableObject::PlayerInteracted);
+
+	InteractAudioPlayer->SetSound(InteractEnterSound); 
 }
 
 void AInteractableObject::PlayerInteracted()
@@ -50,8 +57,8 @@ void AInteractableObject::TriggerZoneEntered(UPrimitiveComponent* OverlappedComp
 
 	bPlayerIsInZone = true;
 
-	if(InteractEnterSound)
-		UGameplayStatics::PlaySoundAtLocation(this, InteractEnterSound, GetActorLocation());
+	// Start playing interact zone sound by fading it in 
+	InteractAudioPlayer->FadeIn(InteractFadeInDuration);  
 }
 
 void AInteractableObject::TriggerZoneExited(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -62,9 +69,9 @@ void AInteractableObject::TriggerZoneExited(UPrimitiveComponent* OverlappedCompo
 		return;
 
 	bPlayerIsInZone = false;
-
-	if(InteractExitSound)
-		UGameplayStatics::PlaySoundAtLocation(this, InteractExitSound, GetActorLocation());
+	
+	// Stop playing interact zone sound by fading it out 
+	InteractAudioPlayer->FadeOut(InteractFadeOutDuration, 0); 
 }
 
 void AInteractableObject::InteractSuccessful()
@@ -74,4 +81,3 @@ void AInteractableObject::InteractSuccessful()
 	if(bCanOnlyInteractOnce)
 		bIsInteractable = false;
 }
-

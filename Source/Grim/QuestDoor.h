@@ -18,8 +18,6 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	virtual void Tick(float DeltaTime) override;
-
 	UFUNCTION(BlueprintCallable)
 	virtual void QuestCompleted() override;
 	
@@ -31,5 +29,8 @@ private:
 	USoundBase* DoorOpenSound = nullptr;
 
 	UPROPERTY(EditAnywhere)
-	USoundBase* SignallingSound = nullptr; 
+	USoundBase* SignallingSound = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	UAudioComponent* AudioPlayer; 
 };
