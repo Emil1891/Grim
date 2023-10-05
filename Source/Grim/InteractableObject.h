@@ -39,6 +39,9 @@ public:
 	bool IsInteractable() const { return bIsInteractable; }
 
 	void SetIsInteractable(const bool bNewInteractable) { bIsInteractable = bNewInteractable; }
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsInteractable = true; 
 
 private:
 
@@ -65,8 +68,6 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	bool bCanOnlyInteractOnce = false;
-
-	bool bIsInteractable = true;
 
 	// The audio player handling sound to play when in the interaction zone 
 	UPROPERTY(EditAnywhere)
