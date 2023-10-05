@@ -23,6 +23,13 @@ void UAudioOcclusionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	// Dont set up component and dont tick if disabled 
+	if(!bEnabled)
+	{
+		PrimaryComponentTick.bCanEverTick = false;
+		return; 
+	}
+	
 	SetAudioComponents();
 
 	CameraComp = GetOwner()->FindComponentByClass<UCameraComponent>(); 
@@ -33,6 +40,9 @@ void UAudioOcclusionComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	if(!bEnabled)
+		return;
+	
 	// Gets all audio components in the level, now every tick in case of spawned audio 
 	//SetAudioComponents();
 

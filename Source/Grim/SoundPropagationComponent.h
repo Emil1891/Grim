@@ -61,6 +61,10 @@ private:
 	float PropagateLerpSpeed = 3500.f;
 
 	// Used to determine distance between propagated sound and the original sound source which will determine volume 
-	float GridNodeDiameter; 
+	float GridNodeDiameter;
+
+	// If component should be used, used while testing it so components does not crash every level 
+	UPROPERTY(EditAnywhere)
+	bool bEnabled = false; 
 
 };

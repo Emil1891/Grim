@@ -24,7 +24,14 @@ USoundPropagationComponent::USoundPropagationComponent()
 void USoundPropagationComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
+	// Dont set up component and dont tick if disabled 
+	if(!bEnabled)
+	{
+		PrimaryComponentTick.bCanEverTick = false;
+		return; 
+	}
+	
 	// I just use the audio occlusion comp so I can use the same audio comp array 
 	AudioOccComp = GetOwner()->FindComponentByClass<UAudioOcclusionComponent>();
 	if(!AudioOccComp) // Sound propagation should prob have its own array of audio comps so you dont have to have both 
@@ -41,7 +48,10 @@ void USoundPropagationComponent::BeginPlay()
 void USoundPropagationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
+	
+	if(!bEnabled)
+		return;
+	
 	// Update each audio component's sound propagation 
 	for(const auto& AudioComp : AudioOccComp->AudioComponents) 
 		UpdateSoundPropagation(AudioComp, DeltaTime); 
