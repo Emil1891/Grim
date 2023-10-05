@@ -124,17 +124,25 @@ bool AGrimCharacter::GetHasRifle()
 
 void AGrimCharacter::Respawn()
 {
-	//SetActorLocation(SpawnLocation);
+	if( !bIsDead )
+	{
+		SetActorEnableCollision(false);
+		//SetActorLocation(SpawnLocation);
+		FTimerHandle DelayHandle;
+		FTimerDelegate DelayDelegate;
+		DelayDelegate.BindLambda([this] {
+			if( bIsDead == true )
+			{
+				UGameplayStatics::OpenLevel(this, FName(UGameplayStatics::GetCurrentLevelName(this)));
+				SetActorEnableCollision(true);
+			}
+		});
 	
-	FTimerHandle DelayHandle;
-	FTimerDelegate DelayDelegate;
-	DelayDelegate.BindLambda([this] {
-		UGameplayStatics::OpenLevel(this, FName(UGameplayStatics::GetCurrentLevelName(this)));
-	});
-	
-	DisableInput(Cast<APlayerController>(GetController()));
-	RespawnTrigger();
-	GetWorldTimerManager().SetTimer(DelayHandle, DelayDelegate, 2.f, false);
+		DisableInput(Cast<APlayerController>(GetController()));
+		RespawnTrigger();
+		GetWorldTimerManager().SetTimer(DelayHandle, DelayDelegate, 2.f, false);
+		bIsDead = true;
+	}
 }
 
 void AGrimCharacter::NotifyHit(
