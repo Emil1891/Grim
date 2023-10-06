@@ -126,8 +126,9 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 	// Iterate through path and find the last node with line of sight to player, that's the location to propagate the sound to 
 	for(int i = 1; i < Path.Num(); i++)
 	{
-		// Draw the path 
-		DrawDebugSphere(GetWorld(), Path[i]->GetWorldCoordinate(), 30, 10, FColor::Red);
+		// Draw the path
+		if(Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass()))->bDrawPath)
+			DrawDebugSphere(GetWorld(), Path[i]->GetWorldCoordinate(), 30, 10, FColor::Red);
 
 		FHitResult HitResult;
 		DoLineTrace(HitResult, Path[i]->GetWorldCoordinate(), ActorsToIgnore); 
@@ -140,7 +141,7 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 		if(!PropagatedSounds.Contains(AudioComp))
 		{
 			SpawnPropagatedSound(AudioComp, Path[i - 1]->GetWorldCoordinate(), Path.Num()); 
-		} else  // If we do have a propagated sound for that location 
+		} else  // If we do have a propagated sound for that audio comp  
 		{
 			// Get the propagated audio component 
 			UAudioComponent* PropagatedAudioComp = PropagatedSounds[AudioComp];
@@ -176,8 +177,8 @@ void USoundPropagationComponent::RemovePropagatedSound(const UAudioComponent* Au
 	// if there is propagated sound in the level 
 	if(PropagatedSounds.Contains(AudioComp))
 	{
-		PropagatedSounds[AudioComp]->DestroyComponent(); // Destroy it 
-		PropagatedSounds.Remove(AudioComp); // And remove it from the map 
+		PropagatedSounds[AudioComp]->VolumeMultiplier = 0; // Disable volume 
+		//PropagatedSounds.Remove(AudioComp); // And remove it from the map 
 	}
 }
 
@@ -195,7 +196,7 @@ void USoundPropagationComponent::SpawnPropagatedSound(UAudioComponent* AudioComp
 	// Does not seem to update, needs to be delayed 1 tick so it can register first? Does update now? 
 	PropagatedAudioComp->SetVolumeMultiplier(GetPropagatedSoundVolume(AudioComp, PathSize)); 
 	PropagatedAudioComp->SetLowPassFilterEnabled(false);
-	// PropagatedAudioComp->AttenuationSettings = PropagatedSoundAttenuation; // Do we want to change attenuation?
+	PropagatedAudioComp->AttenuationSettings = PropagatedSoundAttenuation; // Do we want to change attenuation?
 
 	// Plays the propagated audio source at the correct start time to keep it in sync with the original
 	const float PlayTime = AudioPlayTimes->GetPlayTime(AudioComp); 
