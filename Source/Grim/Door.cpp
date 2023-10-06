@@ -20,7 +20,7 @@ void ADoor::InteractSuccessful()
 	if(DoorOpenSound)
 		UGameplayStatics::PlaySoundAtLocation(this, DoorOpenSound, GetActorLocation()); 
 	
-	Mesh->DestroyComponent();
+	Destroy();
 }
 
 void ADoor::BeginPlay()

@@ -4,6 +4,7 @@
 #include "AudioOcclusionComponent.h"
 
 #include "AITypes.h"
+#include "AudioPlayTimes.h"
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -32,7 +33,7 @@ void UAudioOcclusionComponent::BeginPlay()
 	
 	SetAudioComponents();
 
-	CameraComp = GetOwner()->FindComponentByClass<UCameraComponent>(); 
+	CameraComp = GetOwner()->FindComponentByClass<UCameraComponent>();
 }
 
 // Called every frame
@@ -51,7 +52,13 @@ void UAudioOcclusionComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 	// Update all audio components 
 	for(UAudioComponent* Audio : AudioComponents)
-		UpdateAudioComp(Audio, DeltaTime);
+	{
+		const float DistanceToAudio = FVector::Dist(GetOwner()->GetActorLocation(), Audio->GetComponentLocation());
+
+		// Only update the audio component if it is within fall off distance 
+		if(Audio->AttenuationSettings->Attenuation.FalloffDistance > DistanceToAudio)
+			UpdateAudioComp(Audio, DeltaTime);
+	}
 
 	// Check if timer exceeded delay after updating all audio comps. If so reset it. Audio Comps have already updated
 	// their low pass by now 
@@ -77,10 +84,15 @@ void UAudioOcclusionComponent::SetAudioComponents()
 	{
 		// TODO: ONLY FOR DEBUGGING TO REMOVE UNWANTED SOUNDS
 		 if(bOnlyUseDebugSound && !Actor->GetActorNameOrLabel().Equals("TestSound"))
-		 	continue; 
+		 	continue;
+		
 		// If the actor has an audio component 
 		if(auto AudioComp = Actor->FindComponentByClass<UAudioComponent>())
+		{
+			// Only add it if it has attenuation (is not 2D) and has tag or all sounds should be occluded 
+			if(AudioComp->AttenuationSettings && (bOccludeAllSounds || AudioComp->ComponentHasTag(OccludeCompTag)))
 				AudioComponents.Add(AudioComp); // Add it to the array
+		}
 	}
 }
 

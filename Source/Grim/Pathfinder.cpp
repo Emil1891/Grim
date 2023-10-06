@@ -23,7 +23,7 @@ FPathfinder::FPathfinder(AMapGrid* Grid) : Grid(Grid)
 bool FPathfinder::FindPath(const FVector& From, const FVector& To, TArray<FGridNode*>& Path)
 {
 	FGridNode* StartNode = Grid->GetNodeFromWorldLocation(From); 
-	FGridNode* EndNode = Grid->GetNodeFromWorldLocation(To);
+	FGridNode* EndNode = GetTargetNode(To);
 	
 	// Surely heap is most effective? TArray seems to have support functions for a heap 
 	TArray<FGridNode*> ToBeChecked; 
@@ -91,6 +91,23 @@ bool FPathfinder::FindPath(const FVector& From, const FVector& To, TArray<FGridN
 	// No path found, clear path and return 
 	Path.Empty(); 
 	return false; 
+}
+
+FGridNode* FPathfinder::GetTargetNode(const FVector& TargetLocation) const
+{
+	FGridNode* TargetNode = Grid->GetNodeFromWorldLocation(TargetLocation); 
+
+	// If player resides in an un-walkable node, check its neighbours for a walkable node 
+	if(!TargetNode->IsWalkable())
+	{
+		for(const auto Neighbour : Grid->GetNeighbours(TargetNode))
+		{
+			if(Neighbour->IsWalkable())
+				return Neighbour; 
+		}
+	}
+	
+	return TargetNode; 
 }
 
 TArray<FGridNode*> FPathfinder::GetPath(const FGridNode* StartNode, FGridNode* EndNode)
