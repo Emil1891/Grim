@@ -56,6 +56,9 @@ private:
 	// source to the propagated audio source 
 	float GetPropagatedSoundVolume(const UAudioComponent* AudioComp, const int PathSize) const;
 
+	UFUNCTION()
+	void ActorWithCompDestroyed(AActor* DestroyedActor);
+
 	void MovePropagatedAudioComp(UAudioComponent* PropAudioComp, const class FGridNode* ToNode, const float DeltaTime) const; 
 
 	// Which sound attenuation that the propagated sound should use 

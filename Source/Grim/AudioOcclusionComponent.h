@@ -119,6 +119,9 @@ private:
 
 	void SetLowPassFilter(UAudioComponent* AudioComp, const TArray<FHitResult>& HitResultFromPlayer) const;
 
+	UFUNCTION()
+	void ActorWithCompDestroyed(AActor* DestroyedActor); 
+
 #pragma endregion
 	
 };

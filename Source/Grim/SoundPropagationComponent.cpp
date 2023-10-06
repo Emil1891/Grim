@@ -64,6 +64,12 @@ void USoundPropagationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	// Update each audio component's sound propagation 
 	for(const auto& AudioComp : AudioComponents) 
 	{
+		if(!IsValid(AudioComp))
+		{
+			//AudioComponents.Remove(AudioComp); 
+			continue; 
+		}
+		
 		const float DistanceToAudio = FVector::Dist(GetOwner()->GetActorLocation(), AudioComp->GetComponentLocation());
 
 		// Only update the audio component if it is within fall off distance 
@@ -79,18 +85,30 @@ void USoundPropagationComponent::SetAudioComponents()
 	TArray<AActor*> AllFoundActors;
 	UGameplayStatics::GetAllActorsOfClass(this, ActorClassToSearchFor, AllFoundActors);
 
+	UE_LOG(LogTemp, Warning, TEXT("Found actors: %i"), AllFoundActors.Num())
 	for(const auto Actor : AllFoundActors)
 	{
 		// TODO: ONLY FOR DEBUGGING TO REMOVE UNWANTED SOUNDS
 		if(bOnlyUseDebugSound && !Actor->GetActorNameOrLabel().Equals("TestSound"))
 			continue;
 		
-		// If the actor has an audio component 
-		if(auto AudioComp = Actor->FindComponentByClass<UAudioComponent>())
+		// If the actor has audio components 
+		TArray<UActorComponent*> Comps;
+		Actor->GetComponents(UAudioComponent::StaticClass(), Comps);
+		for(const auto Comp : Comps)
 		{
-			// Only add it if it has attenuation (is not 2D) and has tag or all sounds should be occluded 
-			if(AudioComp->AttenuationSettings && (bPropagateAllSounds || AudioComp->ComponentHasTag(PropagateCompTag)))
-				AudioComponents.Add(AudioComp); // Add it to the array
+			if(auto AudioComp = Cast<UAudioComponent>(Comp))
+			{
+				// Only add it if it has attenuation (is not 2D) and has tag or all sounds should be occluded 
+				if(AudioComp->AttenuationSettings && (bPropagateAllSounds || AudioComp->ComponentHasTag(PropagateCompTag)))
+				{
+					AudioComponents.Add(AudioComp); // Add it to the array
+					UE_LOG(LogTemp, Warning, TEXT("Comp: %s"), *AudioComp->GetOwner()->GetActorNameOrLabel())
+					// Bind function on destroyed to remove it from the array (NOTE: called when the Actor is removed)
+					// And not the audio component 
+					AudioComp->GetOwner()->OnDestroyed.AddDynamic(this, &USoundPropagationComponent::ActorWithCompDestroyed); 
+				}
+			}
 		}
 	}
 }
@@ -126,7 +144,7 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 	// Iterate through path and find the last node with line of sight to player, that's the location to propagate the sound to 
 	for(int i = 1; i < Path.Num(); i++)
 	{
-		// Draw the path
+		// Draw the path, TODO: THIS IS ONLY FOR DEBUGGING! REMOVE WHEN DONE 
 		if(Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass()))->bDrawPath)
 			DrawDebugSphere(GetWorld(), Path[i]->GetWorldCoordinate(), 30, 10, FColor::Red);
 
@@ -194,8 +212,7 @@ void USoundPropagationComponent::SpawnPropagatedSound(UAudioComponent* AudioComp
 	
 	// I guess I can copy it and then only change what we want to differ? 
 	// Does not seem to update, needs to be delayed 1 tick so it can register first? Does update now? 
-	PropagatedAudioComp->SetVolumeMultiplier(GetPropagatedSoundVolume(AudioComp, PathSize)); 
-	PropagatedAudioComp->SetLowPassFilterEnabled(false);
+	PropagatedAudioComp->SetVolumeMultiplier(GetPropagatedSoundVolume(AudioComp, PathSize));
 	PropagatedAudioComp->AttenuationSettings = PropagatedSoundAttenuation; // Do we want to change attenuation?
 
 	// Plays the propagated audio source at the correct start time to keep it in sync with the original
@@ -230,4 +247,15 @@ float USoundPropagationComponent::GetPropagatedSoundVolume(const UAudioComponent
 	UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
 
 	return NewVolume + VolumeOffset; 
+}
+
+void USoundPropagationComponent::ActorWithCompDestroyed(AActor* DestroyedActor)
+{
+	TArray<UActorComponent*> Comps; 
+	DestroyedActor->GetComponents(UAudioComponent::StaticClass(), Comps);
+	for(const auto Comp : Comps)
+	{
+		if(auto AudioComp = Cast<UAudioComponent>(Comp))
+			AudioComponents.Remove(AudioComp); 
+	}
 }

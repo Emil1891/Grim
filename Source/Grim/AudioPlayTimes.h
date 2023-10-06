@@ -36,5 +36,8 @@ private:
 	TMap<UAudioComponent*, float> PlayTimes; 
 
 	UFUNCTION()
-	void OnPlayBackChanged(const USoundWave* PlayingSoundWave, float PlayBackPercent); 
+	void OnPlayBackChanged(const USoundWave* PlayingSoundWave, float PlayBackPercent);
+
+	UFUNCTION()
+	void ActorWithCompDestroyed(AActor* DestroyedActor);
 };
