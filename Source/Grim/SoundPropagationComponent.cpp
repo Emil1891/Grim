@@ -61,7 +61,7 @@ void USoundPropagationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 }
 
 // TODO: TAKE LENGTH INTO ACCOUNT? IF PATH > LENGTH THEN DONT PROPAGATE SOUND?
-// TODO: DONT PLAY SOUND AT ALL IF EXCEEDING AN EVEN GREATER LENGTH? 
+// TODO: DONT PLAY SOUND AT ALL IF EXCEEDING AN EVEN GREATER LENGTH? FALL OFF DISTANCE PROB HANDLES THAT 
 void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioComp, const float DeltaTime)
 {
 	const auto StartTime = FDateTime::Now().GetMillisecond(); // FOR DEBUGGING
@@ -192,7 +192,7 @@ float USoundPropagationComponent::GetPropagatedSoundVolume(const UAudioComponent
 	// giving a value close to 0 when it's close to the audio source and vice versa. That's why 1 - Value is needed 
 	const float NewVolume = 1 - FMath::Clamp(DistanceFromPropToOriginal / FalloffDistance, 0, 1);
 
-	//UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
+	UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
 
 	return NewVolume + VolumeOffset; 
 }

@@ -43,7 +43,7 @@ void UAudioPlayTimes::OnPlayBackChanged(const USoundWave* PlayingSoundWave, cons
 		{
 			// Sounds that loop get percentage of over 1 so need to get rid of the integer part of the number 
 			const float RealPlaybackPercent = FMath::Fmod(PlayBackPercent, 1); 
-			UE_LOG(LogTemp, Warning, TEXT("Play time: %f"), RealPlaybackPercent * PlayingSoundWave->Duration)
+			//UE_LOG(LogTemp, Warning, TEXT("Play time: %f"), RealPlaybackPercent * PlayingSoundWave->Duration)
 			PlayTimes[AudioComp] = RealPlaybackPercent * PlayingSoundWave->Duration;
 			
 			return; 

@@ -10,7 +10,9 @@
  * This class holds all audio components in the level and their play times so the sound propagation can start playing
  * at the correct time (in sync). Currently has a problem with multiple audio components playing the same sound and
  * the sync is not perfect either (maybe because of float round off error?) 
- * This class is based on a solution presented here: https://forums.unrealengine.com/t/how-to-get-current-playback-time-position-of-the-sound-playing-on-an-audio-component/388587/2 
+ * This class is based on a solution presented here: https://forums.unrealengine.com/t/how-to-get-current-playback-time-position-of-the-sound-playing-on-an-audio-component/388587/2
+ *
+ * This class could maybe replace the array in Audio Occlusion Component holding audio components as well 
  */
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

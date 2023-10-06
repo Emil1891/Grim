@@ -24,6 +24,8 @@ private:
 	TArray<FGridNode*> GetPath(const FGridNode* StartNode, FGridNode* EndNode);
 
 	// Returns an approximate cost to travel between nodes (ignoring obstacles)
-	int GetCostToNode(const FGridNode* From, const FGridNode* To) const; 
+	int GetCostToNode(const FGridNode* From, const FGridNode* To) const;
+
+	FGridNode* GetTargetNode(const FVector& TargetLocation) const; 
 
 };
