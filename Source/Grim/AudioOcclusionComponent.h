@@ -36,9 +36,6 @@ private:
 	// Array holding all audio components in the level 
 	TArray<UAudioComponent*> AudioComponents;
 
-	// Make sound propagation a friend so they can share the audio comp array (separate struct instead?) 
-	friend class USoundPropagationComponent; 
-
 	// The class that are checked to see if they have an audio component, default = all actors 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> ActorClassToSearchFor = AActor::StaticClass();
@@ -83,7 +80,17 @@ private:
 
 	// If component should be used, used while testing it so components does not crash every level 
 	UPROPERTY(EditAnywhere)
-	bool bEnabled = false; 
+	bool bEnabled = false;
+
+	// If set to true, all audio components will be occluded. Otherwise only audio components with set tag will be
+	// handled 
+	UPROPERTY(EditDefaultsOnly)
+	bool bOccludeAllSounds = true;
+
+	// The tag that will be looked for on audio components to see if it should be occluded
+	// NOTE: only checks if bOccludeAllSounds is set to false 
+	UPROPERTY(EditDefaultsOnly)
+	FName OccludeCompTag = FName("Occlude"); 
 
 #pragma endregion
 

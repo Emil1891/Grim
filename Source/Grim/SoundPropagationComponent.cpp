@@ -33,18 +33,24 @@ void USoundPropagationComponent::BeginPlay()
 		return; 
 	}
 	
-	// I just use the audio occlusion comp so I can use the same audio comp array 
-	AudioOccComp = GetOwner()->FindComponentByClass<UAudioOcclusionComponent>();
-	if(!AudioOccComp) // Sound propagation should prob have its own array of audio comps so you dont have to have both 
-		UE_LOG(LogTemp, Error, TEXT("No audio occlusion component added to player"))
-	
 	const auto Grid = Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass()));
+
+	if(!Grid)
+	{
+		UE_LOG(LogTemp, Error, TEXT("There is no grid in the level. Sound propagation needs a grid added"))
+		return; 
+	}
 
 	GridNodeDiameter = Grid->GetNodeDiameter(); 
 	
 	Pathfinder = new FPathfinder(Grid);
 
+	SetAudioComponents(); 
+
 	AudioPlayTimes = GetOwner()->FindComponentByClass<UAudioPlayTimes>();
+	AudioPlayTimes->SetPlayTimes(AudioComponents);
+
+	CameraComp = GetOwner()->FindComponentByClass<UCameraComponent>(); 
 }
 
 // Called every frame
@@ -56,8 +62,37 @@ void USoundPropagationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 		return;
 	
 	// Update each audio component's sound propagation 
-	for(const auto& AudioComp : AudioOccComp->AudioComponents) 
-		UpdateSoundPropagation(AudioComp, DeltaTime); 
+	for(const auto& AudioComp : AudioComponents) 
+	{
+		const float DistanceToAudio = FVector::Dist(GetOwner()->GetActorLocation(), AudioComp->GetComponentLocation());
+
+		// Only update the audio component if it is within fall off distance 
+		if(AudioComp->AttenuationSettings->Attenuation.FalloffDistance > DistanceToAudio)
+			UpdateSoundPropagation(AudioComp, DeltaTime); 
+	}
+}
+
+void USoundPropagationComponent::SetAudioComponents()
+{
+	AudioComponents.Empty(); 
+	// Find all actors of set class (default all actors)
+	TArray<AActor*> AllFoundActors;
+	UGameplayStatics::GetAllActorsOfClass(this, ActorClassToSearchFor, AllFoundActors);
+
+	for(const auto Actor : AllFoundActors)
+	{
+		// TODO: ONLY FOR DEBUGGING TO REMOVE UNWANTED SOUNDS
+		if(bOnlyUseDebugSound && !Actor->GetActorNameOrLabel().Equals("TestSound"))
+			continue;
+		
+		// If the actor has an audio component 
+		if(auto AudioComp = Actor->FindComponentByClass<UAudioComponent>())
+		{
+			// Only add it if it has attenuation (is not 2D) and has tag or all sounds should be occluded 
+			if(AudioComp->AttenuationSettings && (bPropagateAllSounds || AudioComp->ComponentHasTag(PropagateCompTag)))
+				AudioComponents.Add(AudioComp); // Add it to the array
+		}
+	}
 }
 
 // TODO: TAKE LENGTH INTO ACCOUNT? IF PATH > LENGTH THEN DONT PROPAGATE SOUND?
@@ -81,7 +116,6 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 		return; 
 	}
 	
-	TArray<FGridNode*> Path; 
 	if(!Pathfinder->FindPath(AudioComp->GetComponentLocation(), GetOwner()->GetActorLocation(), Path))
 	{
 		// No path found, remove eventual propagated sound and return 
@@ -92,8 +126,9 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 	// Iterate through path and find the last node with line of sight to player, that's the location to propagate the sound to 
 	for(int i = 1; i < Path.Num(); i++)
 	{
-		// Draw the path 
-		DrawDebugSphere(GetWorld(), Path[i]->GetWorldCoordinate(), 30, 10, FColor::Red);
+		// Draw the path
+		if(Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass()))->bDrawPath)
+			DrawDebugSphere(GetWorld(), Path[i]->GetWorldCoordinate(), 30, 10, FColor::Red);
 
 		FHitResult HitResult;
 		DoLineTrace(HitResult, Path[i]->GetWorldCoordinate(), ActorsToIgnore); 
@@ -106,7 +141,7 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 		if(!PropagatedSounds.Contains(AudioComp))
 		{
 			SpawnPropagatedSound(AudioComp, Path[i - 1]->GetWorldCoordinate(), Path.Num()); 
-		} else  // If we do have a propagated sound for that location 
+		} else  // If we do have a propagated sound for that audio comp  
 		{
 			// Get the propagated audio component 
 			UAudioComponent* PropagatedAudioComp = PropagatedSounds[AudioComp];
@@ -133,7 +168,7 @@ bool USoundPropagationComponent::DoLineTrace(FHitResult& HitResultOut, const FVe
 {
 	// Line trace from the node to player to see if there is line of sight  
 	return UKismetSystemLibrary::LineTraceSingleForObjects(GetWorld(), StartLoc,
-		AudioOccComp->CameraComp->GetComponentLocation(), AudioOccComp->ObjectsToQuery, false,
+		CameraComp->GetComponentLocation(), ObjectsToQuery, false,
 		ActorsToIgnore, EDrawDebugTrace::ForOneFrame, HitResultOut, true); 
 }
 
@@ -142,8 +177,8 @@ void USoundPropagationComponent::RemovePropagatedSound(const UAudioComponent* Au
 	// if there is propagated sound in the level 
 	if(PropagatedSounds.Contains(AudioComp))
 	{
-		PropagatedSounds[AudioComp]->DestroyComponent(); // Destroy it 
-		PropagatedSounds.Remove(AudioComp); // And remove it from the map 
+		PropagatedSounds[AudioComp]->VolumeMultiplier = 0; // Disable volume 
+		//PropagatedSounds.Remove(AudioComp); // And remove it from the map 
 	}
 }
 
@@ -161,7 +196,7 @@ void USoundPropagationComponent::SpawnPropagatedSound(UAudioComponent* AudioComp
 	// Does not seem to update, needs to be delayed 1 tick so it can register first? Does update now? 
 	PropagatedAudioComp->SetVolumeMultiplier(GetPropagatedSoundVolume(AudioComp, PathSize)); 
 	PropagatedAudioComp->SetLowPassFilterEnabled(false);
-	// PropagatedAudioComp->AttenuationSettings = PropagatedSoundAttenuation; // Do we want to change attenuation?
+	PropagatedAudioComp->AttenuationSettings = PropagatedSoundAttenuation; // Do we want to change attenuation?
 
 	// Plays the propagated audio source at the correct start time to keep it in sync with the original
 	const float PlayTime = AudioPlayTimes->GetPlayTime(AudioComp); 
