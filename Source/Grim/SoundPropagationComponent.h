@@ -26,6 +26,13 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
+	
+	// Contains all audio components that should be propagated in the level 
+	UPROPERTY()
+	TArray<UAudioComponent*> AudioComponents;
+
+	// Called in begin play to fill the array with the audio comps in the level 
+	void SetAudioComponents(); 
 
 	// The audio occlusion component that holds all audio comps in the level
 	UPROPERTY()
@@ -71,5 +78,35 @@ private:
 	class UAudioPlayTimes* AudioPlayTimes;
 
 	UPROPERTY(EditAnywhere)
-	float VolumeOffset = -0.3f; 
+	float VolumeOffset = -0.3f;
+
+	// If set to true, all audio components will be propagated. Otherwise only audio components with set tag will be
+	// handled 
+	UPROPERTY(EditDefaultsOnly)
+	bool bPropagateAllSounds = true;
+
+	// The tag that will be looked for on audio components to see if it should be propagated
+	// NOTE: only checks if bPropagateAllSounds is set to false 
+	UPROPERTY(EditDefaultsOnly)
+	FName PropagateCompTag = FName("Propagate");
+
+	// TODO: EVERYTHING BELOW IS SHARED BETWEEN AUDIO OCCLUSION AND THIS CLASS AND SHOULD PROBABLY NOT BE DUPLICATED
+	// TODO: AND INSTEAD USE A STRUCT(?), SEPARATE CLASS HOLDING SHARED INFORMATION? 
+	
+	// Only for debugging so only 1 sound is handled 
+	UPROPERTY(EditAnywhere)
+	bool bOnlyUseDebugSound = true;
+
+	// The class that are checked to see if they have an audio component, default = all actors 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AActor> ActorClassToSearchFor = AActor::StaticClass();
+
+	UPROPERTY()
+	class UCameraComponent* CameraComp;
+
+	// Which object types that should be considered to block audio 
+	UPROPERTY(EditAnywhere)
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectsToQuery;
+
+	TArray<FGridNode*> Path; 
 };
