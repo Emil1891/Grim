@@ -22,7 +22,7 @@ FPathfinder::FPathfinder(AMapGrid* Grid, AActor* Player, USoundPropagationCompon
 		UE_LOG(LogTemp, Error, TEXT("No map grid found in level"))
 }
 
-bool FPathfinder::FindPath(const FVector& From, const FVector& To, TArray<FGridNode*>& Path)
+bool FPathfinder::FindPath(const FVector& From, const FVector& To, TArray<FGridNode*>& Path, bool& bOutPlayerHasMoved)
 {
 	FGridNode* StartNode = Grid->GetNodeFromWorldLocation(From); 
 	FGridNode* EndNode = GetTargetNode(To);
@@ -33,9 +33,14 @@ bool FPathfinder::FindPath(const FVector& From, const FVector& To, TArray<FGridN
 
 	// Target has not moved, simply return 
 	if(EndNode == OldEndNode)
+	{
+		bOutPlayerHasMoved = false; 
 		return true;
+	}
+
+	bOutPlayerHasMoved = true; 
 	
-	// this if will be removed, bad way of forcing path draw each frame by always updating the path 
+	// TODO: remove if, bad way of forcing path draw each frame by always updating the path 
 	if(!Grid->bDrawPath) 
 		OldEndNode = EndNode; 
 

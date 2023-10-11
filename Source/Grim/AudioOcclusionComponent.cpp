@@ -45,7 +45,7 @@ void UAudioOcclusionComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 		return;
 	
 	// Gets all audio components in the level, now every tick in case of spawned audio 
-	//SetAudioComponents();
+	// SetAudioComponents();
 
 	// Add to timer 
 	LowPassTimer += DeltaTime;

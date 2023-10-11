@@ -61,6 +61,8 @@ void USoundPropagationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	
 	if(!bEnabled)
 		return;
+
+	// SetAudioComponents(); 
 	
 	// Update each audio component's sound propagation 
 	for(const auto& AudioComp : AudioComponents) 
@@ -133,20 +135,18 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 		return; 
 	}
 
-	TArray<FGridNode*> Path;
-
-	// Use the stored path if the audio comp has one, then if player has not moved we can use the already calculated path 
-	if(Paths.Contains(AudioComp))
-	{
-		Path = Paths[AudioComp]; 
-	}
+	bool bPlayerHasMoved = true; 
 	
-	if(!Pathfinder->FindPath(AudioComp->GetComponentLocation(), GetOwner()->GetActorLocation(), Path))
+	if(!Pathfinder->FindPath(AudioComp->GetComponentLocation(), GetOwner()->GetActorLocation(), Path, bPlayerHasMoved))
 	{
 		// No path found, remove eventual propagated sound and return 
 		RemovePropagatedSound(AudioComp); 
 		return; 
 	}
+
+	// Path found but player has not moved, no need to update sound propagation 
+	if(!bPlayerHasMoved)
+		return; 
 	
 	// Iterate through path and find the last node with line of sight to player, that's the location to propagate the sound to 
 	for(int i = 1; i < Path.Num(); i++)
@@ -175,7 +175,7 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 			// otherwise it's in the correct place already so we dont have to do anything 
 			if(!PropagatedAudioComp->GetComponentLocation().Equals(Path[i - 1]->GetWorldCoordinate()))
 			{
-				MovePropagatedAudioComp(PropagatedAudioComp, Path[i - 1], DeltaTime);
+				MovePropagatedAudioComp(AudioComp, PropagatedAudioComp, Path[i - 1], DeltaTime);
 				// Volume also needs to change when updating 
 				PropagatedAudioComp->SetVolumeMultiplier(GetPropagatedSoundVolume(AudioComp, Path.Num()));
 			}
@@ -202,7 +202,7 @@ void USoundPropagationComponent::RemovePropagatedSound(const UAudioComponent* Au
 	// if there is propagated sound in the level 
 	if(PropagatedSounds.Contains(AudioComp))
 	{
-		PropagatedSounds[AudioComp]->VolumeMultiplier = 0; // Disable volume 
+		PropagatedSounds[AudioComp]->SetVolumeMultiplier(0); // Disable volume 
 		//PropagatedSounds.Remove(AudioComp); // And remove it from the map 
 	}
 }
@@ -221,19 +221,25 @@ void USoundPropagationComponent::SpawnPropagatedSound(UAudioComponent* AudioComp
 	PropagatedAudioComp->AttenuationSettings = PropagatedSoundAttenuation; 
 
 	// Plays the propagated audio source at the correct start time to keep it in sync with the original
-	const float PlayTime = AudioPlayTimes->GetPlayTime(AudioComp); 
+	const float PlayTime = AudioPlayTimes->GetPlayTime(AudioComp);
 	PropagatedAudioComp->Play(PlayTime); 
 	
 	PropagatedSounds.Add(AudioComp, PropagatedAudioComp); 
 }
 
-void USoundPropagationComponent::MovePropagatedAudioComp(UAudioComponent* PropAudioComp, const FGridNode* ToNode, const float DeltaTime) const
+void USoundPropagationComponent::MovePropagatedAudioComp(UAudioComponent* AudioComp, UAudioComponent* PropAudioComp, const FGridNode* ToNode, const float DeltaTime) const
 {
 	// Moves the Propagated audio component to its correct location 
 	const FVector CurrentLoc = PropAudioComp->GetComponentLocation();
 	const FVector TargetLoc = ToNode->GetWorldCoordinate(); 
 	const FVector InterpolatedLoc = UKismetMathLibrary::VInterpTo_Constant(CurrentLoc, TargetLoc, DeltaTime, PropagateLerpSpeed); 
 	PropAudioComp->SetWorldLocation(InterpolatedLoc);
+
+	// Volume multiplier is set to 0 when propagation should not occur which messes with the playtime for the audio comp
+	// Getting the playtime of the connected audio comp should solve it 
+	const float PlayTime = AudioPlayTimes->GetPlayTime(AudioComp);
+	if(PlayTime != -1)
+		PropAudioComp->Play(PlayTime); 
 }
 
 float USoundPropagationComponent::GetPropagatedSoundVolume(const UAudioComponent* AudioComp, const int PathSize) const

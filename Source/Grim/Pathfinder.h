@@ -13,7 +13,7 @@ class GRIM_API FPathfinder
 public:
 	explicit FPathfinder(class AMapGrid* Grid, AActor* Player, USoundPropagationComponent* PropComp); 
 
-	bool FindPath(const FVector& From, const FVector& To, TArray<class FGridNode*>& Path); 
+	bool FindPath(const FVector& From, const FVector& To, TArray<class FGridNode*>& Path, bool& bOutPlayerHasMoved); 
 	
 	~FPathfinder();
 

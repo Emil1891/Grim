@@ -78,6 +78,8 @@ private:
 	// Map containing every audio comp with a path so path does not need to be recalculated if player has not moved 
 	TMap<UAudioComponent*, TArray<class FGridNode*>> Paths; 
 
+	TArray<FGridNode*> Path; 
+
 #pragma endregion
 
 #pragma region Functions 
@@ -103,7 +105,7 @@ private:
 	UFUNCTION()
 	void ActorWithCompDestroyed(AActor* DestroyedActor);
 
-	void MovePropagatedAudioComp(UAudioComponent* PropAudioComp, const class FGridNode* ToNode, const float DeltaTime) const;
+	void MovePropagatedAudioComp(UAudioComponent* AudioComp, UAudioComponent* PropAudioComp, const class FGridNode* ToNode, const float DeltaTime) const;
 
 #pragma endregion 
 
