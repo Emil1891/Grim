@@ -9,15 +9,13 @@
 AMapGrid::AMapGrid()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true; 
-	
+	PrimaryActorTick.bCanEverTick = true;
 }
 
 AMapGrid::~AMapGrid()
 {
 	// does unreal handle this with its garbage collection? 
-	delete [] Nodes;
-	//delete Pathfind; 
+	delete [] Nodes; 
 }
 
 // Called when the game starts or when spawned
@@ -29,28 +27,18 @@ void AMapGrid::BeginPlay()
 	
 	CreateGrid();
 	
-	if(bDrawDebugStuff) 
+	if(bDrawGridNodes && !bDrawOnlyBoxExtentOnTick) 
 		DrawDebugStuff();
+
+	// Only enable tick if debugging grid size 
+	SetActorTickEnabled(bDrawOnlyBoxExtentOnTick); 
 }
 
 void AMapGrid::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	// TODO: I DONT THINK THIS CLASS HAS ANY REASON TO TICK, TURN IT OFF? MAP CHANGES SHOULD BE HANDLED ANY OTHER WAY
-	// TODO: THAN BUILDING THE GRID EACH FRAME. POSSIBLE TO ONLY UPDATE THE AFFECTED GRIDS? 
 	
-	if(!bDrawDebugStuff)
-		return;
-	
-	// DEBUGGING BELOW SHOWING THE NODE THAT THE PLAYER IS CURRENTLY IN
-	const auto PlayerNode = GetNodeFromWorldLocation(UGameplayStatics::GetPlayerPawn(this, 0)->GetActorLocation()); 
-	DrawDebugSphere(GetWorld(), PlayerNode->GetWorldCoordinate(), NodeRadius, 10, FColor::Cyan);
-
-	// THEN DISPLAYING ITS NEIGHBOURS 
-	for(auto N : GetNeighbours(PlayerNode))
-		if(N->IsWalkable()) // if it's walkable 
-			DrawDebugSphere(GetWorld(), N->GetWorldCoordinate(), NodeRadius, 10, FColor::Purple);
+	DrawDebugBox(GetWorld(), GetActorLocation() + FVector::UpVector * (GridSize.Z / 2), GridSize / 2, FColor::Red, false, -1, 0, 10); 
 }
 
 void AMapGrid::CreateGrid()
@@ -69,11 +57,7 @@ void AMapGrid::CreateGrid()
 
 	GridBottomLeftLocation = GridBottomLeft; 
 
-	TArray<AActor*> ActorsToIgnore;
-	TArray<AActor*> OverlappingActors;
-
-	AActor* OverlapActor = GetWorld()->SpawnActor<AActor>(OverlapCheckActorClass, GetActorLocation(),
-	                                                      FRotator::ZeroRotator); 
+	TArray<AActor*> ActorsToIgnore; 
 	
 	for(int x = 0; x < GridArrayLengthX; x++)
 	{
@@ -86,23 +70,14 @@ void AMapGrid::CreateGrid()
 				NodePos.Y += y * NodeDiameter + NodeRadius;
 				NodePos.Z += z * NodeDiameter + NodeRadius; // Pos now in node center 
 
-				// The lines below would be better but they dont seem to work? Should try again when a level is in place
-				// because they seem to detect some (handplaced?) objects? 
-				// const bool bAreaWalkable = UKismetSystemLibrary::SphereOverlapActors(this, NodePos,
-				// 	NodeRadius, UnwalkableObjects, UClass::StaticClass(), ActorsToIgnore,OverlappingActors);
-
-				// AddToArray(x, y, GridNode(bAreaWalkable, NodePos));
-			
-				// This is currently a work around to above but it works fine as of now, but adjusting node radius
-				// requires adjusting the Overlapping actor's mesh's size manually. solution above would not require it
-				OverlapActor->SetActorLocation(NodePos);
-				OverlapActor->GetOverlappingActors(OverlappingActors);
+				// Check overlap to see if the node is un-walkable 
+				TArray<AActor*> OverlappingActors; 
+				UKismetSystemLibrary::SphereOverlapActors(this, NodePos, NodeRadius, AudioBlockingObjects, AActor::StaticClass(), ActorsToIgnore, OverlappingActors);
 
 				AddToArray(x, y, z, FGridNode(OverlappingActors.IsEmpty(), NodePos, x, y, z));
 			}
 		}
 	}
-	OverlapActor->Destroy(); 
 }
 
 int AMapGrid::GetIndex (const int IndexX, const int IndexY, const int IndexZ) const
@@ -175,10 +150,9 @@ bool AMapGrid::IsOutOfBounds(const int GridX, const int GridY, const int GridZ) 
 void AMapGrid::DrawDebugStuff() const
 {
 	// Draw border of grid 
-	DrawDebugBox(GetWorld(), GetActorLocation(), FVector(GridSize.X / 2, GridSize.Y / 2, 3), FColor::Red, true);
+	DrawDebugBox(GetWorld(), GetActorLocation() + FVector::UpVector * (GridSize.Z / 2), GridSize / 2, FColor::Red, false, -1, 0, 10); 
 
-	// draw each node where unwalkable nodes are red and walkable green
-	int ActualArrayCount = 0; 
+	// draw each node where un-walkable (audio blocking) nodes are red and walkable green 
 	for(int x = 0; x < GridArrayLengthX; x++)
 	{
 		for(int y = 0; y < GridArrayLengthY; y++)

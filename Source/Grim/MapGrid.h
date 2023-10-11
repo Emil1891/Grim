@@ -22,8 +22,9 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:
 	virtual void Tick(float DeltaSeconds) override;
+
+public:
 
 	// Returns the node that the World Location is in 
 	FGridNode* GetNodeFromWorldLocation(const FVector WorldLoc) const;
@@ -66,13 +67,9 @@ private:
 
 	FVector GridBottomLeftLocation; 
 
-	// Not used as of now since that method did not seem to work 
+	// Object that should be considered to block audio, default: world static 
 	UPROPERTY(EditAnywhere)
-	TArray<TEnumAsByte<EObjectTypeQuery>> UnwalkableObjects;
-
-	// What is used instead to check if a node is walkable (actor checks overlaps)
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<AActor> OverlapCheckActorClass;
+	TArray<TEnumAsByte<EObjectTypeQuery>> AudioBlockingObjects { TEnumAsByte<EObjectTypeQuery>::EnumType::ObjectTypeQuery1 };
 
 #pragma endregion 
 
@@ -92,8 +89,14 @@ private:
 
 #pragma region Debugging
 
+	// Draws the grid's nodes if true, red nodes block audio, green ones do not 
 	UPROPERTY(EditAnywhere)
-	bool bDrawDebugStuff = true; 
+	bool bDrawGridNodes = true; 
+	
+	// Determines if the grid's extent should be drawn on tick for easier use in determining what size it should be 
+	// Note: all other debug is disabled if this is active 
+	UPROPERTY(EditAnywhere) 
+	bool bDrawOnlyBoxExtentOnTick = false; 
 	
 	void DrawDebugStuff() const;
 

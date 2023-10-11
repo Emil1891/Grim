@@ -21,8 +21,14 @@ void UAudioPlayTimes::SetPlayTimes(TArray<UAudioComponent*>& AudioComponents)
 		AudioComp->OnAudioPlaybackPercent.AddDynamic(this, &UAudioPlayTimes::OnPlayBackChanged);
 		AudioComp->Play(); // Needs to call play for some reason for it to work 
 		
-		PlayTimes.Add(AudioComp); 
+		PlayTimes.Add(AudioComp);
+		
+		// Bind function on destroyed to remove it from the map (NOTE: called when the Actor is removed)
+		// And not the audio component 
+		AudioComp->GetOwner()->OnDestroyed.AddDynamic(this, &UAudioPlayTimes::ActorWithCompDestroyed); 
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Audio Comps: %i"), AudioComponents.Num())
 }
 
 float UAudioPlayTimes::GetPlayTime(const UAudioComponent* AudioComp) const
@@ -51,5 +57,13 @@ void UAudioPlayTimes::OnPlayBackChanged(const USoundWave* PlayingSoundWave, cons
 	}
 }
 
-
-
+void UAudioPlayTimes::ActorWithCompDestroyed(AActor* DestroyedActor)
+{
+	TArray<UActorComponent*> Comps; 
+	DestroyedActor->GetComponents(UAudioComponent::StaticClass(), Comps);
+	for(const auto Comp : Comps)
+	{
+		if(auto AudioComp = Cast<UAudioComponent>(Comp))
+			PlayTimes.Remove(AudioComp); 
+	}
+}

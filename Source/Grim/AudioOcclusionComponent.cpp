@@ -51,13 +51,19 @@ void UAudioOcclusionComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 	LowPassTimer += DeltaTime;
 
 	// Update all audio components 
-	for(UAudioComponent* Audio : AudioComponents)
+	for(UAudioComponent* AudioComp : AudioComponents)
 	{
-		const float DistanceToAudio = FVector::Dist(GetOwner()->GetActorLocation(), Audio->GetComponentLocation());
+		if(!IsValid(AudioComp))
+		{
+			//AudioComponents.Remove(AudioComp); 
+			continue; 
+		}
+		
+		const float DistanceToAudio = FVector::Dist(GetOwner()->GetActorLocation(), AudioComp->GetComponentLocation());
 
 		// Only update the audio component if it is within fall off distance 
-		if(Audio->AttenuationSettings->Attenuation.FalloffDistance > DistanceToAudio)
-			UpdateAudioComp(Audio, DeltaTime);
+		if(AudioComp->AttenuationSettings->Attenuation.FalloffDistance > DistanceToAudio)
+			UpdateAudioComp(AudioComp, DeltaTime);
 	}
 
 	// Check if timer exceeded delay after updating all audio comps. If so reset it. Audio Comps have already updated
@@ -86,12 +92,22 @@ void UAudioOcclusionComponent::SetAudioComponents()
 		 if(bOnlyUseDebugSound && !Actor->GetActorNameOrLabel().Equals("TestSound"))
 		 	continue;
 		
-		// If the actor has an audio component 
-		if(auto AudioComp = Actor->FindComponentByClass<UAudioComponent>())
+		// If the actor has audio components 
+		TArray<UActorComponent*> Comps;
+		Actor->GetComponents(UAudioComponent::StaticClass(), Comps);
+		for(const auto Comp : Comps)
 		{
-			// Only add it if it has attenuation (is not 2D) and has tag or all sounds should be occluded 
-			if(AudioComp->AttenuationSettings && (bOccludeAllSounds || AudioComp->ComponentHasTag(OccludeCompTag)))
-				AudioComponents.Add(AudioComp); // Add it to the array
+			if(auto AudioComp = Cast<UAudioComponent>(Comp))
+			{
+				// Only add it if it has attenuation (is not 2D) and has tag or all sounds should be occluded 
+				if(AudioComp->AttenuationSettings && (bOccludeAllSounds || AudioComp->ComponentHasTag(OccludeCompTag)))
+				{
+					AudioComponents.Add(AudioComp); // Add it to the array
+					// Bind function on destroyed to remove it from the array (NOTE: called when the Actor is removed)
+					// And not the audio component 
+					AudioComp->GetOwner()->OnDestroyed.AddDynamic(this, &UAudioOcclusionComponent::ActorWithCompDestroyed); 
+				}
+			}
 		}
 	}
 }
@@ -207,7 +223,7 @@ float UAudioOcclusionComponent::GetThicknessValue(const FHitResult& HitResultFro
 
 void UAudioOcclusionComponent::ResetAudioComponentOnNoBlock(UAudioComponent* AudioComponent)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Volume: 1, Low Pass: Disabled"))
+	//UE_LOG(LogTemp, Warning, TEXT("Volume: 1, Low Pass: Disabled"))
 
 	// Resets the audio comp values if they are not already reset 
 	if(AudioComponent->VolumeMultiplier != 1)
@@ -230,4 +246,15 @@ void UAudioOcclusionComponent::SetLowPassFilter(UAudioComponent* AudioComp, cons
 	AudioComp->SetLowPassFilterFrequency(Frequency);
 	
 	// UE_LOG(LogTemp, Warning, TEXT("Volume: %f Frequency: %f"), AudioComp->VolumeMultiplier, Frequency); 
+}
+
+void UAudioOcclusionComponent::ActorWithCompDestroyed(AActor* DestroyedActor)
+{
+	TArray<UActorComponent*> Comps; 
+	DestroyedActor->GetComponents(UAudioComponent::StaticClass(), Comps);
+	for(const auto Comp : Comps)
+	{
+		if(auto AudioComp = Cast<UAudioComponent>(Comp))
+			AudioComponents.Remove(AudioComp); 
+	}
 }
