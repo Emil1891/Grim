@@ -78,7 +78,10 @@ private:
 	// Map containing every audio comp with a path so path does not need to be recalculated if player has not moved 
 	TMap<UAudioComponent*, TArray<class FGridNode*>> Paths; 
 
-	TArray<FGridNode*> Path; 
+	TArray<FGridNode*> Path;
+
+	UPROPERTY(EditAnywhere)
+	USoundEffectSourcePresetChain* PropagationSourceEffectChain;
 
 #pragma endregion
 

@@ -219,7 +219,8 @@ void USoundPropagationComponent::SpawnPropagatedSound(UAudioComponent* AudioComp
 	PropagatedAudioComp->SetWorldLocation(SpawnLocation);
 	
 	PropagatedAudioComp->SetVolumeMultiplier(GetPropagatedSoundVolume(AudioComp, PathSize));
-	PropagatedAudioComp->AttenuationSettings = PropagatedSoundAttenuation; 
+	PropagatedAudioComp->AttenuationSettings = PropagatedSoundAttenuation;
+	PropagatedAudioComp->SetSourceEffectChain(PropagationSourceEffectChain); 
 
 	// Plays the propagated audio source at the correct start time to keep it in sync with the original
 	const float PlayTime = AudioPlayTimes->GetPlayTime(AudioComp);
@@ -248,7 +249,7 @@ float USoundPropagationComponent::GetPropagatedSoundVolume(const UAudioComponent
 	// giving a value close to 0 when it's close to the audio source and vice versa. That's why 1 - Value is needed 
 	const float NewVolume = 1 - FMath::Clamp(DistanceFromPropToOriginal / FalloffDistance, 0, 1);
 
-	// UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
+	UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
 
 	return NewVolume + PropagatedVolumeOffset; 
 }
