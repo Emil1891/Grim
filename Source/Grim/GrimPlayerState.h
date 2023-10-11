@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "Components/ForceFeedbackComponent.h"
+#include "Sound/SoundCue.h"
 #include "GrimPlayerState.generated.h"
+
 
 /**
  * 
@@ -31,6 +34,9 @@ private:
 	// value between 0 and 1 which is the player's fear/danger level 
 	float FearLevel = 0.f;
 
+	UPROPERTY(EditAnywhere)
+	float VibrationDuration = 1.6f;
+
 	UPROPERTY()
 	TArray<class AFearPoint*> AllFearPoints; 
 	
@@ -40,5 +46,11 @@ private:
 	UAudioComponent* FearAudioComponent;
 
 	UPROPERTY(EditAnywhere)
-	USoundBase* FearSoundCue; 
+	USoundBase* FearSoundCue;
+
+	UPROPERTY(EditAnywhere)
+	UForceFeedbackEffect* ForceFeedbackEffect;
+
+	UPROPERTY(EditAnywhere)
+	UForceFeedbackComponent* ForceFeedbackComponent;
 };
