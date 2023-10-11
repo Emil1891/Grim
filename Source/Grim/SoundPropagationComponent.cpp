@@ -202,6 +202,7 @@ void USoundPropagationComponent::RemovePropagatedSound(const UAudioComponent* Au
 	// if there is propagated sound in the level 
 	if(PropagatedSounds.Contains(AudioComp))
 	{
+		// TODO: Setting volume to 0 causes weird behaviour in play time, should set to value near zero 
 		PropagatedSounds[AudioComp]->SetVolumeMultiplier(0); // Disable volume 
 		//PropagatedSounds.Remove(AudioComp); // And remove it from the map 
 	}
@@ -234,12 +235,6 @@ void USoundPropagationComponent::MovePropagatedAudioComp(UAudioComponent* AudioC
 	const FVector TargetLoc = ToNode->GetWorldCoordinate(); 
 	const FVector InterpolatedLoc = UKismetMathLibrary::VInterpTo_Constant(CurrentLoc, TargetLoc, DeltaTime, PropagateLerpSpeed); 
 	PropAudioComp->SetWorldLocation(InterpolatedLoc);
-
-	// Volume multiplier is set to 0 when propagation should not occur which messes with the playtime for the audio comp
-	// Getting the playtime of the connected audio comp should solve it 
-	const float PlayTime = AudioPlayTimes->GetPlayTime(AudioComp);
-	if(PlayTime != -1)
-		PropAudioComp->Play(PlayTime); 
 }
 
 float USoundPropagationComponent::GetPropagatedSoundVolume(const UAudioComponent* AudioComp, const int PathSize) const
