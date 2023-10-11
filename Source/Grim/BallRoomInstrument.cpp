@@ -18,7 +18,7 @@ void ABallRoomInstrument::BeginPlay()
 	// in the BP and then found here 
 	ActiveAudioPlayer = Cast<UAudioComponent>(GetComponentsByTag(UAudioComponent::StaticClass(), FName("ActiveAudioPlayer"))[0]);
 	ActiveAudioPlayer->SetSound(ActiveSound); 
-	ActiveAudioPlayer->VolumeMultiplier = 0;
+	ActiveAudioPlayer->SetVolumeMultiplier(0); 
 	ActiveAudioPlayer->Play();
 	
 	// Puzzle manager assigns itself if it is not already set 
