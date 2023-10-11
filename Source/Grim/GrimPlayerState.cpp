@@ -30,8 +30,11 @@ void AGrimPlayerState::BeginPlay()
 	FearAudioComponent->SetFloatParameter(FName("Proximity"), 1);
 	FearAudioComponent->Play();
 
-	ForceFeedbackComponent = UGameplayStatics::SpawnForceFeedbackAttached(ForceFeedbackEffect, GetPlayerController()->GetCharacter()->GetRootComponent(), NAME_None, FVector(0), FRotator(0), EAttachLocation::KeepRelativeOffset, false, true, 1, 0);
-	ForceFeedbackEffect->Duration = VibrationDuration;
+	if(ForceFeedbackEffect)
+	{
+		ForceFeedbackComponent = UGameplayStatics::SpawnForceFeedbackAttached(ForceFeedbackEffect, GetPlayerController()->GetCharacter()->GetRootComponent(), NAME_None, FVector(0), FRotator(0), EAttachLocation::KeepRelativeOffset, false, true, 1, 0);
+		ForceFeedbackEffect->Duration = VibrationDuration;
+	}
 }
 
 void AGrimPlayerState::SetFearLevel()
