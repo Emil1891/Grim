@@ -114,7 +114,7 @@ void UAudioOcclusionComponent::SetAudioComponents()
 
 bool UAudioOcclusionComponent::DoLineTrace(TArray<FHitResult>& HitResultsOut, const FVector& StartLocation, const FVector& EndLocation, const TArray<AActor*>& ActorsToIgnore) const
 {
-	return UKismetSystemLibrary::LineTraceMultiForObjects(GetWorld(), StartLocation, EndLocation, ObjectsToQuery, false, ActorsToIgnore, EDrawDebugTrace::ForOneFrame, HitResultsOut, true); 
+	return UKismetSystemLibrary::LineTraceMultiForObjects(GetWorld(), StartLocation, EndLocation, AudioBlockingTypes, false, ActorsToIgnore, EDrawDebugTrace::ForOneFrame, HitResultsOut, true); 
 }
 
 void UAudioOcclusionComponent::UpdateAudioComp(UAudioComponent* AudioComp, const float DeltaTime)

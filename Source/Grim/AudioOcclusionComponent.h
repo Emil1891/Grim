@@ -44,9 +44,9 @@ private:
 	UPROPERTY()
 	class UCameraComponent* CameraComp = nullptr;
 	
-	// Which object types that should be considered to block audio 
+	// Which object types that should be considered to block audio, default: WorldStatic  
 	UPROPERTY(EditAnywhere)
-	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectsToQuery;
+	TArray<TEnumAsByte<EObjectTypeQuery>> AudioBlockingTypes { TEnumAsByte<EObjectTypeQuery>::EnumType::ObjectTypeQuery1 };
 
 	// How far audio can travel through meshes until it should be completely blocked/silenced 
 	UPROPERTY(EditAnywhere)
@@ -80,7 +80,7 @@ private:
 
 	// If component should be used, used while testing it so components does not crash every level 
 	UPROPERTY(EditAnywhere)
-	bool bEnabled = false;
+	bool bEnabled = true;
 
 	// If set to true, all audio components will be occluded. Otherwise only audio components with set tag will be
 	// handled 
@@ -90,7 +90,7 @@ private:
 	// The tag that will be looked for on audio components to see if it should be occluded
 	// NOTE: only checks if bOccludeAllSounds is set to false 
 	UPROPERTY(EditDefaultsOnly)
-	FName OccludeCompTag = FName("Occlude"); 
+	FName OccludeCompTag = FName("Occlude");
 
 #pragma endregion
 

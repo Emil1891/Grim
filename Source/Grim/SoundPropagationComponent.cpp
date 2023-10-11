@@ -3,7 +3,6 @@
 
 #include "SoundPropagationComponent.h"
 
-#include "AudioOcclusionComponent.h"
 #include "AudioPlayTimes.h"
 #include "MapGrid.h"
 #include "Pathfinder.h"
@@ -11,6 +10,7 @@
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "GridNode.h"
 
 // Sets default values for this component's properties
 USoundPropagationComponent::USoundPropagationComponent()
@@ -29,7 +29,7 @@ void USoundPropagationComponent::BeginPlay()
 	// Dont set up component and dont tick if disabled 
 	if(!bEnabled)
 	{
-		PrimaryComponentTick.bCanEverTick = false;
+		SetComponentTickEnabled(false); 
 		return; 
 	}
 	
@@ -38,12 +38,13 @@ void USoundPropagationComponent::BeginPlay()
 	if(!Grid)
 	{
 		UE_LOG(LogTemp, Error, TEXT("There is no grid in the level. Sound propagation needs a grid added"))
+		SetComponentTickEnabled(false); 
 		return; 
 	}
 
 	GridNodeDiameter = Grid->GetNodeDiameter(); 
 	
-	Pathfinder = new FPathfinder(Grid);
+	Pathfinder = new FPathfinder(Grid, GetOwner(), this);
 
 	SetAudioComponents(); 
 
@@ -65,10 +66,7 @@ void USoundPropagationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 	for(const auto& AudioComp : AudioComponents) 
 	{
 		if(!IsValid(AudioComp))
-		{
-			//AudioComponents.Remove(AudioComp); 
 			continue; 
-		}
 		
 		const float DistanceToAudio = FVector::Dist(GetOwner()->GetActorLocation(), AudioComp->GetComponentLocation());
 
@@ -80,7 +78,8 @@ void USoundPropagationComponent::TickComponent(float DeltaTime, ELevelTick TickT
 
 void USoundPropagationComponent::SetAudioComponents()
 {
-	AudioComponents.Empty(); 
+	AudioComponents.Empty();
+	
 	// Find all actors of set class (default all actors)
 	TArray<AActor*> AllFoundActors;
 	UGameplayStatics::GetAllActorsOfClass(this, ActorClassToSearchFor, AllFoundActors);
@@ -133,6 +132,14 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 		RemovePropagatedSound(AudioComp);
 		return; 
 	}
+
+	TArray<FGridNode*> Path;
+
+	// Use the stored path if the audio comp has one, then if player has not moved we can use the already calculated path 
+	if(Paths.Contains(AudioComp))
+	{
+		Path = Paths[AudioComp]; 
+	}
 	
 	if(!Pathfinder->FindPath(AudioComp->GetComponentLocation(), GetOwner()->GetActorLocation(), Path))
 	{
@@ -144,7 +151,7 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 	// Iterate through path and find the last node with line of sight to player, that's the location to propagate the sound to 
 	for(int i = 1; i < Path.Num(); i++)
 	{
-		// Draw the path, TODO: THIS IS ONLY FOR DEBUGGING! REMOVE WHEN DONE 
+		// Draw the path, TODO: THIS IS ONLY FOR DEBUGGING! REMOVE WHEN DONE!!! 
 		if(Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass()))->bDrawPath)
 			DrawDebugSphere(GetWorld(), Path[i]->GetWorldCoordinate(), 30, 10, FColor::Red);
 
@@ -186,7 +193,7 @@ bool USoundPropagationComponent::DoLineTrace(FHitResult& HitResultOut, const FVe
 {
 	// Line trace from the node to player to see if there is line of sight  
 	return UKismetSystemLibrary::LineTraceSingleForObjects(GetWorld(), StartLoc,
-		CameraComp->GetComponentLocation(), ObjectsToQuery, false,
+		CameraComp->GetComponentLocation(), AudioBlockingTypes, false,
 		ActorsToIgnore, EDrawDebugTrace::ForOneFrame, HitResultOut, true); 
 }
 
@@ -210,10 +217,8 @@ void USoundPropagationComponent::SpawnPropagatedSound(UAudioComponent* AudioComp
 	PropagatedAudioComp->RegisterComponent();
 	PropagatedAudioComp->SetWorldLocation(SpawnLocation);
 	
-	// I guess I can copy it and then only change what we want to differ? 
-	// Does not seem to update, needs to be delayed 1 tick so it can register first? Does update now? 
 	PropagatedAudioComp->SetVolumeMultiplier(GetPropagatedSoundVolume(AudioComp, PathSize));
-	PropagatedAudioComp->AttenuationSettings = PropagatedSoundAttenuation; // Do we want to change attenuation?
+	PropagatedAudioComp->AttenuationSettings = PropagatedSoundAttenuation; 
 
 	// Plays the propagated audio source at the correct start time to keep it in sync with the original
 	const float PlayTime = AudioPlayTimes->GetPlayTime(AudioComp); 
@@ -233,9 +238,7 @@ void USoundPropagationComponent::MovePropagatedAudioComp(UAudioComponent* PropAu
 
 float USoundPropagationComponent::GetPropagatedSoundVolume(const UAudioComponent* AudioComp, const int PathSize) const
 {
-	// NOTE: IF WE USE DIFFERENT ATTENUATION LATER FOR THE PROPAGATED SOUND, THEN WE NEED THAT AUDIO COMP INSTEAD OF
-	// THE ORIGINAL 
-	const float FalloffDistance = AudioComp->AttenuationSettings->Attenuation.GetMaxFalloffDistance();
+	const float FalloffDistance = AudioComp->AttenuationSettings->Attenuation.GetMaxFalloffDistance(); 
 
 	// This is an approximation that assumes each node traveled is the same length (diagonal travels are longer)
 	const int DistanceFromPropToOriginal = PathSize * GridNodeDiameter; 
@@ -246,7 +249,7 @@ float USoundPropagationComponent::GetPropagatedSoundVolume(const UAudioComponent
 
 	// UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
 
-	return NewVolume + VolumeOffset; 
+	return NewVolume + PropagatedVolumeOffset; 
 }
 
 void USoundPropagationComponent::ActorWithCompDestroyed(AActor* DestroyedActor)

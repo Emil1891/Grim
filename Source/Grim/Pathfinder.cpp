@@ -3,6 +3,8 @@
 
 #include "Pathfinder.h"
 #include "MapGrid.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "SoundPropagationComponent.h"
 
 // Tried overloading comparison operator (<) in GridNode class but did not seem to work,
 // using a predicate does seem to work even though it is somewhat clunkier
@@ -14,7 +16,7 @@ namespace
 	};
 }
 
-FPathfinder::FPathfinder(AMapGrid* Grid) : Grid(Grid)
+FPathfinder::FPathfinder(AMapGrid* Grid, AActor* Player, USoundPropagationComponent* PropComp) : Grid(Grid), Player(Player), PropComp(PropComp)
 {
 	if(!Grid)
 		UE_LOG(LogTemp, Error, TEXT("No map grid found in level"))
@@ -95,15 +97,23 @@ bool FPathfinder::FindPath(const FVector& From, const FVector& To, TArray<FGridN
 
 FGridNode* FPathfinder::GetTargetNode(const FVector& TargetLocation) const
 {
-	FGridNode* TargetNode = Grid->GetNodeFromWorldLocation(TargetLocation); 
+	FGridNode* TargetNode = Grid->GetNodeFromWorldLocation(TargetLocation);
 
-	// If player resides in an un-walkable node, check its neighbours for a walkable node 
+	const TArray<AActor*> ActorsToIgnore { Player }; 
+
+	// If player resides in an un-walkable node, check its neighbours for a walkable node with line of sight to player
+	// The player's node can become a node on other side of walls if it was not for the line trace 
 	if(!TargetNode->IsWalkable())
 	{
 		for(const auto Neighbour : Grid->GetNeighbours(TargetNode))
 		{
 			if(Neighbour->IsWalkable())
-				return Neighbour; 
+			{
+				// Neighbour is valid if no hit occured for the line trace, i.e. has line of sight to player 
+				FHitResult HitResult; 
+				if(!UKismetSystemLibrary::LineTraceSingleForObjects(PropComp, Neighbour->GetWorldCoordinate(), Player->GetActorLocation(), PropComp->AudioBlockingTypes, false, ActorsToIgnore, EDrawDebugTrace::ForOneFrame, HitResult, true)) 
+					return Neighbour;
+			}
 		}
 	}
 	
