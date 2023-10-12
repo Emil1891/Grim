@@ -89,8 +89,12 @@ void UAudioOcclusionComponent::SetAudioComponents()
 	for(const auto Actor : AllFoundActors)
 	{
 		// TODO: ONLY FOR DEBUGGING TO REMOVE UNWANTED SOUNDS
-		 if(bOnlyUseDebugSound && !Actor->GetActorNameOrLabel().Equals("TestSound"))
+		 if(bOnlyUseDebugSound && !Actor->GetActorNameOrLabel().Equals("TestSound")) 
 		 	continue;
+
+		// Check if actor is of a class that should be ignored 
+		if(ActorShouldBeIgnored(Actor))
+			continue; 
 		
 		// If the actor has audio components 
 		TArray<UActorComponent*> Comps;
@@ -110,6 +114,17 @@ void UAudioOcclusionComponent::SetAudioComponents()
 			}
 		}
 	}
+}
+
+bool UAudioOcclusionComponent::ActorShouldBeIgnored(const AActor* Actor)
+{
+	for(const auto UnwantedClass : ActorClassesToIgnore)
+	{
+		if(Actor->GetClass()->IsChildOf(UnwantedClass))
+			return true; 
+	}
+
+	return false; 
 }
 
 bool UAudioOcclusionComponent::DoLineTrace(TArray<FHitResult>& HitResultsOut, const FVector& StartLocation, const FVector& EndLocation, const TArray<AActor*>& ActorsToIgnore) const

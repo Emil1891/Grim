@@ -22,6 +22,10 @@ public:
 
 protected:
 	virtual void InteractSuccessful() override;
+
+	// called when an actor exits the trigger zone
+	virtual void TriggerZoneExited(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	                               UPrimitiveComponent* OtherComponent, int OtherBodyIndex) override;
 	
 private:
 

@@ -39,6 +39,10 @@ private:
 	// The class that are checked to see if they have an audio component, default = all actors 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AActor> ActorClassToSearchFor = AActor::StaticClass();
+
+	// These classes will not be searched to check if they have audio components 
+	UPROPERTY(EditAnywhere)
+	TSet<TSubclassOf<AActor>> ActorClassesToIgnore; 
 	
 	// The camera's location will be the start location for all line traces as it is located in the player's "head" 
 	UPROPERTY()
@@ -120,7 +124,9 @@ private:
 	void SetLowPassFilter(UAudioComponent* AudioComp, const TArray<FHitResult>& HitResultFromPlayer) const;
 
 	UFUNCTION()
-	void ActorWithCompDestroyed(AActor* DestroyedActor); 
+	void ActorWithCompDestroyed(AActor* DestroyedActor);
+
+	bool ActorShouldBeIgnored(const AActor* Actor); 
 
 #pragma endregion
 	

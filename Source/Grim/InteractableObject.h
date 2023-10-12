@@ -50,6 +50,12 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UAudioComponent* InteractAudioPlayer; 
 
+	bool bPlayerIsInZone = false;
+	
+	// called when an actor exits the trigger zone
+	UFUNCTION()
+	virtual void TriggerZoneExited(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+							UPrimitiveComponent* OtherComponent, int OtherBodyIndex);
 private:
 
 	UPROPERTY()
@@ -62,13 +68,7 @@ private:
 	void TriggerZoneEntered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 							UPrimitiveComponent* OtherComponent, int OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	// called when an actor exits the trigger zone
-	UFUNCTION()
-	void TriggerZoneExited(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-							UPrimitiveComponent* OtherComponent, int OtherBodyIndex);
-
-	bool bPlayerIsInZone = false;
-
+	
 	// Sound to play when the player enters the trigger zone and can interact (looping sound)
 	UPROPERTY(EditAnywhere)
 	USoundBase* InteractEnterSound = nullptr;

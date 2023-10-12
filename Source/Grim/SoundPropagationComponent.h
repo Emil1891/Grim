@@ -85,7 +85,7 @@ private:
 
 	// Speed of the interpolation of volume changes for the propagated sound 
 	UPROPERTY(EditAnywhere) 
-	float PropVolumeLerpSpeed = 1.f; 
+	float PropVolumeLerpSpeed = 0.5f; 
 
 #pragma endregion
 
@@ -117,7 +117,8 @@ private:
 
 #pragma endregion 
 
-	// TODO: EVERYTHING BELOW IS SHARED BETWEEN AUDIO OCCLUSION AND THIS CLASS. Is that good or bad? 
+	// TODO: EVERYTHING BELOW IS SHARED BETWEEN AUDIO OCCLUSION AND THIS CLASS. Is that good or bad?
+	// TODO: Allows for separate behaviour for occlusion and propagation but is also at least some duplication 
 	
 	// Only for debugging so only 1 sound is handled 
 	UPROPERTY(EditAnywhere)
@@ -132,5 +133,11 @@ private:
 
 	// Which object types that should be considered to block audio, default: WorldStatic 
 	UPROPERTY(EditAnywhere)
-	TArray<TEnumAsByte<EObjectTypeQuery>> AudioBlockingTypes { TEnumAsByte<EObjectTypeQuery>::EnumType::ObjectTypeQuery1 }; 
+	TArray<TEnumAsByte<EObjectTypeQuery>> AudioBlockingTypes { TEnumAsByte<EObjectTypeQuery>::EnumType::ObjectTypeQuery1 };
+
+	// These classes will not be searched to check if they have audio components 
+	UPROPERTY(EditAnywhere)
+	TSet<TSubclassOf<AActor>> ActorClassesToIgnore;
+	
+	bool ActorShouldBeIgnored(const AActor* Actor); 
 };

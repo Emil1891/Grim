@@ -90,8 +90,12 @@ void USoundPropagationComponent::SetAudioComponents()
 	for(const auto Actor : AllFoundActors)
 	{
 		// TODO: ONLY FOR DEBUGGING TO REMOVE UNWANTED SOUNDS
-		if(bOnlyUseDebugSound && !Actor->GetActorNameOrLabel().Equals("TestSound"))
+		if(ActorClassesToIgnore.Contains(Actor->GetClass()) || bOnlyUseDebugSound && !Actor->GetActorNameOrLabel().Equals("TestSound"))
 			continue;
+
+		// Check if actor is of a class that should be ignored 
+		if(ActorShouldBeIgnored(Actor))
+			continue; 
 		
 		// If the actor has audio components 
 		TArray<UActorComponent*> Comps;
@@ -112,6 +116,17 @@ void USoundPropagationComponent::SetAudioComponents()
 			}
 		}
 	}
+}
+
+bool USoundPropagationComponent::ActorShouldBeIgnored(const AActor* Actor)
+{
+	for(const auto UnwantedClass : ActorClassesToIgnore)
+	{
+		if(Actor->GetClass()->IsChildOf(UnwantedClass))
+			return true; 
+	}
+
+	return false; 
 }
 
 // TODO: TAKE LENGTH INTO ACCOUNT? IF PATH > LENGTH THEN DONT PROPAGATE SOUND? 
@@ -144,7 +159,9 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 		return; 
 	}
 
-	// Path found but player has not moved, no need to update sound propagation 
+	// Path found but player has not moved, no need to update sound propagation
+	// TODO: This is currently bugged, work around is enabling draw path which forces the path to be updated regardless
+	// TODO: of player's movement. So, todo: fix it 
 	if(!bPlayerHasMoved)
 		return; 
 	
