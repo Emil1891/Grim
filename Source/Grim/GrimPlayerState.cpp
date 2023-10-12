@@ -3,10 +3,8 @@
 #include "GrimPlayerState.h"
 
 #include "FearPoint.h"
-#include "SAdvancedTransformInputBox.h"
 #include "Components/AudioComponent.h"
 #include "Components/ForceFeedbackComponent.h"
-#include "EnvironmentQuery/EnvQueryTypes.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -35,11 +33,6 @@ void AGrimPlayerState::BeginPlay()
 		ForceFeedbackComponent = UGameplayStatics::SpawnForceFeedbackAttached(ForceFeedbackEffect, GetPlayerController()->GetCharacter()->GetRootComponent(), NAME_None, FVector(0), FRotator(0), EAttachLocation::KeepRelativeOffset, false, true, 1, 0);
 		ForceFeedbackEffect->Duration = VibrationDuration;
 	}
-	
-
-	
-	
-	
 }
 
 void AGrimPlayerState::SetFearLevel()
@@ -53,7 +46,6 @@ void AGrimPlayerState::SetFearLevel()
 		if(FearPointFearLevel > MaxFear)
 			MaxFear = FearPointFearLevel; 
 	}
-
 	FearLevel = MaxFear;
 }
 
@@ -62,9 +54,9 @@ void AGrimPlayerState::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	
 	SetFearLevel();
-
+	
 	// update the fear/proximity value in the audio component 
 	FearAudioComponent->SetFloatParameter(FName("Proximity"), FearLevel);
 
-	ForceFeedbackComponent->IntensityMultiplier = FearLevel/2;
+	ForceFeedbackComponent->IntensityMultiplier = std::sqrt(FearLevel)/2 - .27f;
 }
