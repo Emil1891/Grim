@@ -75,13 +75,17 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	FName PropagateCompTag = FName("Propagate");
 
-	// Map containing every audio comp with a path so path does not need to be recalculated if player has not moved 
+	// Map containing every audio comp with a path so path does not need to be recalculated if player has not moved
 	TMap<UAudioComponent*, TArray<class FGridNode*>> Paths; 
 
 	TArray<FGridNode*> Path;
 
 	UPROPERTY(EditAnywhere)
 	USoundEffectSourcePresetChain* PropagationSourceEffectChain;
+
+	// Speed of the interpolation of volume changes for the propagated sound 
+	UPROPERTY(EditAnywhere) 
+	float PropVolumeLerpSpeed = 1.f; 
 
 #pragma endregion
 
@@ -97,18 +101,19 @@ private:
 
 	bool DoLineTrace(FHitResult& HitResultOut, const FVector& StartLoc, const TArray<AActor*>& ActorsToIgnore) const;
 
-	void RemovePropagatedSound(const UAudioComponent* AudioComp);
+	void RemovePropagatedSound(const UAudioComponent* AudioComp, const float DeltaTime);
 
-	void SpawnPropagatedSound(UAudioComponent* AudioComp, const FVector& SpawnLocation, const int PathSize);
+	// Returns the created propagated audio component 
+	UAudioComponent* SpawnPropagatedSound(UAudioComponent* AudioComp, const FVector& SpawnLocation, const int PathSize);
 
 	// Returns the volume multiplier that the propagated audio source should have based on length from the original
 	// source to the propagated audio source 
-	float GetPropagatedSoundVolume(const UAudioComponent* AudioComp, const int PathSize) const;
+	void SetPropagatedSoundVolume(const UAudioComponent* AudioComp, UAudioComponent* PropAudioComp, int PathSize, const float DeltaTime) const;
 
 	UFUNCTION()
 	void ActorWithCompDestroyed(AActor* DestroyedActor);
 
-	void MovePropagatedAudioComp(UAudioComponent* AudioComp, UAudioComponent* PropAudioComp, const class FGridNode* ToNode, const float DeltaTime) const;
+	void MovePropagatedAudioComp(UAudioComponent* PropAudioComp, const class FGridNode* ToNode, const float DeltaTime) const;
 
 #pragma endregion 
 
