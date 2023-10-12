@@ -20,13 +20,11 @@ public:
 protected:
 	virtual void InteractSuccessful() override;
 
-	virtual void BeginPlay() override;
-
 private:
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* Mesh;
 
 	UPROPERTY(EditAnywhere)
-	USoundBase* DoorOpenSound = nullptr; 
+	USoundBase* DoorOpenSound = nullptr;
 	
 };
