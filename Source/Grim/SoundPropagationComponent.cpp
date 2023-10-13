@@ -54,6 +54,17 @@ void USoundPropagationComponent::BeginPlay()
 	CameraComp = GetOwner()->FindComponentByClass<UCameraComponent>(); 
 }
 
+void USoundPropagationComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	for(const auto AudioComp : AudioComponents)
+	{
+		if(IsValid(AudioComp))
+			AudioComp->GetOwner()->OnDestroyed.RemoveDynamic(this, &USoundPropagationComponent::ActorWithCompDestroyed); 
+	}
+}
+
 // Called every frame
 void USoundPropagationComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -133,7 +144,7 @@ bool USoundPropagationComponent::ActorShouldBeIgnored(const AActor* Actor)
 // TODO: DONT PLAY SOUND AT ALL IF EXCEEDING AN EVEN GREATER LENGTH? FALL OFF DISTANCE PROB HANDLES THAT 
 void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioComp, const float DeltaTime)
 {
-	const auto StartTime = FDateTime::Now().GetMillisecond(); // FOR DEBUGGING
+	// const auto StartTime = FDateTime::Now().GetMillisecond(); // FOR DEBUGGING
 	
 	// Actors to ignore when doing line traces 
 	const TArray<AActor*> ActorsToIgnore { GetOwner(), AudioComp->GetOwner() };
@@ -150,7 +161,9 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 		return; 
 	}
 
-	bool bPlayerHasMoved = true; 
+	bool bPlayerHasMoved = true;
+
+	TArray<FGridNode*> Path; 
 	
 	if(!Pathfinder->FindPath(AudioComp->GetComponentLocation(), GetOwner()->GetActorLocation(), Path, bPlayerHasMoved))
 	{
@@ -159,26 +172,26 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 		return; 
 	}
 
-	// Path found but player has not moved, no need to update sound propagation
-	// TODO: This is currently bugged, work around is enabling draw path which forces the path to be updated regardless
-	// TODO: of player's movement. So, todo: fix it 
-	if(!bPlayerHasMoved)
-		return; 
+	// If player has not moved then path is not calculated so FindPath does not set Path, so we can get the stored path 
+	if(!bPlayerHasMoved && Paths.Contains(AudioComp)) 
+		Path = Paths[AudioComp];
+	else // Player has moved so there is a new path, store it 
+		Paths.Add(AudioComp, Path); 
 	
 	// Iterate through path and find the last node with line of sight to player, that's the location to propagate the sound to 
 	for(int i = 1; i < Path.Num(); i++)
 	{
-		// Draw the path, TODO: THIS IS ONLY FOR DEBUGGING! REMOVE WHEN DONE!!! 
+		// Draw the path (only drawn while there is line of sight), TODO: THIS IS ONLY FOR DEBUGGING! REMOVE WHEN DONE! 
 		if(Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass()))->bDrawPath)
 			DrawDebugSphere(GetWorld(), Path[i]->GetWorldCoordinate(), 30, 10, FColor::Red);
-
+		
 		FHitResult HitResult;
 		DoLineTrace(HitResult, Path[i]->GetWorldCoordinate(), ActorsToIgnore); 
-
+		
 		// If nothing is blocking from the node to player, check next node 
 		if(!HitResult.bBlockingHit)
-			continue; 
-
+			continue;
+		
 		UAudioComponent* PropAudioComp = nullptr; 
 		
 		// if we do not have a propagated sound for that audio comp in the world already 
@@ -193,11 +206,7 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 			// if it's in the wrong location, lerp it to the correct location to prevent abrupt direction changes,
 			// otherwise it's in the correct place already so we dont have to do anything 
 			if(!PropAudioComp->GetComponentLocation().Equals(Path[i - 1]->GetWorldCoordinate()))
-			{
 				MovePropagatedAudioComp(PropAudioComp, Path[i - 1], DeltaTime);
-				// Volume also needs to change when updating 
-				// PropAudioComp->SetVolumeMultiplier(GetPropagatedSoundVolume(AudioComp, Path.Num()));
-			}
 		}
 
 		// Call volume change each update when it's not been removed to lerp the volume
@@ -208,7 +217,7 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 	}
 
 	// DEBUGGING 
-	const auto EndTime = FDateTime::Now().GetMillisecond();
+	// const auto EndTime = FDateTime::Now().GetMillisecond();
 	//if(EndTime - StartTime != 0)
 	//	UE_LOG(LogTemp, Warning, TEXT("Update time: %i ms"), EndTime - StartTime)
 }
@@ -239,15 +248,12 @@ void USoundPropagationComponent::RemovePropagatedSound(const UAudioComponent* Au
 
 UAudioComponent* USoundPropagationComponent::SpawnPropagatedSound(UAudioComponent* AudioComp, const FVector& SpawnLocation, const int PathSize) 
 {
-	// I now duplicate the object giving it the exact same properties, that might not be what we want since we
-	// dont want the muffling, different volume and so forth 
 	UAudioComponent* PropagatedAudioComp = DuplicateObject<UAudioComponent>(AudioComp, AudioComp->GetOwner(), FName(FString("PropagatedSound"))); 
 
 	AudioComp->GetOwner()->AddInstanceComponent(PropagatedAudioComp);
 	PropagatedAudioComp->RegisterComponent();
 	PropagatedAudioComp->SetWorldLocation(SpawnLocation);
 	
-	// PropagatedAudioComp->SetVolumeMultiplier(GetPropagatedSoundVolume(AudioComp, PathSize));
 	PropagatedAudioComp->AttenuationSettings = PropagatedSoundAttenuation;
 	PropagatedAudioComp->SetSourceEffectChain(PropagationSourceEffectChain); 
 
@@ -290,11 +296,22 @@ void USoundPropagationComponent::SetPropagatedSoundVolume(const UAudioComponent*
 
 void USoundPropagationComponent::ActorWithCompDestroyed(AActor* DestroyedActor)
 {
+	// Remove the destroyed actor's audio components from the collections 
 	TArray<UActorComponent*> Comps; 
 	DestroyedActor->GetComponents(UAudioComponent::StaticClass(), Comps);
 	for(const auto Comp : Comps)
 	{
 		if(auto AudioComp = Cast<UAudioComponent>(Comp))
-			AudioComponents.Remove(AudioComp); 
+		{
+			AudioComponents.Remove(AudioComp);
+
+			if(PropagatedSounds.Contains(AudioComp))
+				PropagatedSounds.Remove(AudioComp);
+
+			if(Paths.Contains(AudioComp))
+				Paths.Remove(AudioComp); 
+		}
 	}
+	
+	DestroyedActor->OnDestroyed.RemoveDynamic(this, &USoundPropagationComponent::ActorWithCompDestroyed); 
 }

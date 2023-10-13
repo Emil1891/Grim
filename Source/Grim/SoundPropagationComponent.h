@@ -20,6 +20,8 @@ public:
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+	
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:	
 	// Called every frame
@@ -41,7 +43,7 @@ private:
 
 	// Map containing the original audio component and the spawned, propagated audio component
 	UPROPERTY()
-	TMap<UAudioComponent*, UAudioComponent*> PropagatedSounds;
+	TMap<UAudioComponent*, UAudioComponent*> PropagatedSounds; // TODO? Can this map replace the audio comp array? 
 
 	// Which sound attenuation that the propagated sound should use 
 	UPROPERTY(EditAnywhere)
@@ -77,8 +79,6 @@ private:
 
 	// Map containing every audio comp with a path so path does not need to be recalculated if player has not moved
 	TMap<UAudioComponent*, TArray<class FGridNode*>> Paths; 
-
-	TArray<FGridNode*> Path;
 
 	UPROPERTY(EditAnywhere)
 	USoundEffectSourcePresetChain* PropagationSourceEffectChain;

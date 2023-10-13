@@ -36,6 +36,17 @@ void UAudioOcclusionComponent::BeginPlay()
 	CameraComp = GetOwner()->FindComponentByClass<UCameraComponent>();
 }
 
+void UAudioOcclusionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	for(const auto AudioComp : AudioComponents)
+	{
+		if(IsValid(AudioComp))
+			AudioComp->GetOwner()->OnDestroyed.RemoveDynamic(this, &UAudioOcclusionComponent::ActorWithCompDestroyed); 
+	}
+}
+
 // Called every frame
 void UAudioOcclusionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -269,7 +280,9 @@ void UAudioOcclusionComponent::ActorWithCompDestroyed(AActor* DestroyedActor)
 	DestroyedActor->GetComponents(UAudioComponent::StaticClass(), Comps);
 	for(const auto Comp : Comps)
 	{
-		if(auto AudioComp = Cast<UAudioComponent>(Comp))
+		if(auto AudioComp = Cast<UAudioComponent>(Comp)) 
 			AudioComponents.Remove(AudioComp); 
 	}
+
+	DestroyedActor->OnDestroyed.RemoveDynamic(this, &UAudioOcclusionComponent::ActorWithCompDestroyed); 
 }
