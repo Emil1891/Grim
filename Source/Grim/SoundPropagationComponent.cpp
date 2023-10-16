@@ -181,9 +181,7 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 	// Iterate through path and find the last node with line of sight to player, that's the location to propagate the sound to 
 	for(int i = 1; i < Path.Num(); i++)
 	{
-		// Draw the path (only drawn while there is line of sight), TODO: THIS IS ONLY FOR DEBUGGING! REMOVE WHEN DONE! 
-		if(Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass()))->bDrawPath)
-			DrawDebugSphere(GetWorld(), Path[i]->GetWorldCoordinate(), 30, 10, FColor::Red);
+
 		
 		FHitResult HitResult;
 		DoLineTrace(HitResult, Path[i]->GetWorldCoordinate(), ActorsToIgnore); 
@@ -216,6 +214,13 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 		break; // Found the node with block so no need to traverse the path any further 
 	}
 
+	for(auto Node : Path)
+	{
+		// Draw the path (only drawn while there is line of sight), TODO: THIS IS ONLY FOR DEBUGGING! REMOVE WHEN DONE! 
+		if(Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass()))->bDrawPath)
+			DrawDebugSphere(GetWorld(), Node->GetWorldCoordinate(), 30, 10, FColor::Red);
+	}
+
 	// DEBUGGING 
 	// const auto EndTime = FDateTime::Now().GetMillisecond();
 	//if(EndTime - StartTime != 0)
@@ -237,7 +242,7 @@ void USoundPropagationComponent::RemovePropagatedSound(const UAudioComponent* Au
 	{
 		// TODO: Setting volume to 0 causes weird behaviour in play time, should probably set a value near zero 
 		UAudioComponent* PropAudio = PropagatedSounds[AudioComp]; 
-		const float NewVolume = FMath::FInterpConstantTo(PropAudio->VolumeMultiplier, 0, DeltaTime, PropVolumeLerpSpeed); 
+		const float NewVolume = FMath::FInterpConstantTo(PropAudio->VolumeMultiplier, 0.01f, DeltaTime, PropVolumeLerpSpeed); 
 		PropAudio->SetVolumeMultiplier(NewVolume); // Interpolates volume to zero
 
 		UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)

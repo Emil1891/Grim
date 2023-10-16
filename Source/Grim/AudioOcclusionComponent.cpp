@@ -179,7 +179,7 @@ void UAudioOcclusionComponent::UpdateAudioComp(UAudioComponent* AudioComp, const
 
 	// Subtract the volume multiplier with the total occlusion value to determine how low the sound should be, higher
 	// occlusion means lower volume 
-	AudioComp->SetVolumeMultiplier(1 - TotalOccValue);
+	AudioComp->SetVolumeMultiplier(FMath::Clamp(1 - TotalOccValue, 0.01f, 1)); 
 
 	// Update LowPass only at set interval for optimization 
 	if(LowPassTimer > LowPassUpdateDelay)
