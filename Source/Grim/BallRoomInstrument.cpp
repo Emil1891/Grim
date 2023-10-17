@@ -70,5 +70,24 @@ void ABallRoomInstrument::TriggerZoneExited(UPrimitiveComponent* OverlappedCompo
 	// if the instrument is not playing its active sound, then enable interaction
 	// forcing the player to exit the zone if the last instrument when failing the puzzle 
 	if(ActiveAudioPlayer->VolumeMultiplier == 0)
-		SetIsInteractable(true); 
+		SetIsInteractable(true);
+
+	// Reset idle audio player on exit, depending on if player activated it or not 
+	if(ActiveAudioPlayer->VolumeMultiplier == 0)
+		AudioPlayer->SetVolumeMultiplier(1);
+	else
+		AudioPlayer->SetVolumeMultiplier(0);
+}
+
+void ABallRoomInstrument::TriggerZoneEntered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComponent, int OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	Super::TriggerZoneEntered(OverlappedComponent, OtherActor, OtherComponent, OtherBodyIndex, bFromSweep, SweepResult);
+
+	// Has not activated the instrument 
+	if(ActiveAudioPlayer->VolumeMultiplier == 0)
+	{
+		// Boost the volume so player can easier distinguish which instrument they will interact with 
+		AudioPlayer->SetVolumeMultiplier(VolumeMultWhenInZone); 
+	}
 }

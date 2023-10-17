@@ -56,18 +56,17 @@ protected:
 	UFUNCTION()
 	virtual void TriggerZoneExited(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 							UPrimitiveComponent* OtherComponent, int OtherBodyIndex);
+	
+	// called when an actor enters the trigger zone
+	UFUNCTION()
+	virtual void TriggerZoneEntered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	                                UPrimitiveComponent* OtherComponent, int OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 private:
 
 	UPROPERTY()
 	APawn* Player;
 
 	void PlayerInteracted();
-
-	// called when an actor enters the trigger zone
-	UFUNCTION()
-	void TriggerZoneEntered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-							UPrimitiveComponent* OtherComponent, int OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
 	
 	// Sound to play when the player enters the trigger zone and can interact (looping sound)
 	UPROPERTY(EditAnywhere)

@@ -26,6 +26,9 @@ protected:
 	// called when an actor exits the trigger zone
 	virtual void TriggerZoneExited(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	                               UPrimitiveComponent* OtherComponent, int OtherBodyIndex) override;
+
+	virtual void TriggerZoneEntered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	                                UPrimitiveComponent* OtherComponent, int OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 	
 private:
 
@@ -41,5 +44,7 @@ private:
 	// The audio player that houses the active sound 
 	UPROPERTY(EditAnywhere)
 	UAudioComponent* ActiveAudioPlayer;
-	
+
+	UPROPERTY(EditAnywhere)
+	float VolumeMultWhenInZone = 1.5f; 
 };
