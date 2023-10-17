@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GridNode.h"
+#include "TextIOManager.h"
 
 // Sets default values for this component's properties
 USoundPropagationComponent::USoundPropagationComponent()
@@ -25,6 +26,11 @@ USoundPropagationComponent::USoundPropagationComponent()
 void USoundPropagationComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if(UTextIOManager::GetToken(UTextIOManager::ETokens::SoundPropToggle).Equals("false"))
+	{
+		bEnabled = false; 
+	}
 	
 	// Dont set up component and dont tick if disabled 
 	if(!bEnabled)
