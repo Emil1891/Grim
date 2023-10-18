@@ -27,6 +27,10 @@ void USoundPropagationComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	FString Temp; 
+	if(!FPaths::FileExists(*(FPaths::GameSourceDir() + "LogParameters.txt")))
+		UTextIOManager::FileSaveString(FString("SoundProp: true")); 
+	
 	if(UTextIOManager::GetToken(UTextIOManager::ETokens::SoundPropToggle).Equals("false"))
 	{
 		bEnabled = false; 
