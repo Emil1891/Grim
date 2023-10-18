@@ -11,6 +11,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GridNode.h"
+#include "ParameterSettings.h"
 
 // Sets default values for this component's properties
 USoundPropagationComponent::USoundPropagationComponent()
@@ -25,6 +26,8 @@ USoundPropagationComponent::USoundPropagationComponent()
 void USoundPropagationComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	bEnabled = UParameterSettings::GetParamSettings()->AudioSystemEnable; 
 	
 	// Dont set up component and dont tick if disabled 
 	if(!bEnabled)
@@ -245,7 +248,7 @@ void USoundPropagationComponent::RemovePropagatedSound(const UAudioComponent* Au
 		const float NewVolume = FMath::FInterpConstantTo(PropAudio->VolumeMultiplier, 0.01f, DeltaTime, PropVolumeLerpSpeed); 
 		PropAudio->SetVolumeMultiplier(NewVolume); // Interpolates volume to zero
 
-		UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
+		// UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
 
 		//PropagatedSounds.Remove(AudioComp); // And remove it from the map 
 	}
@@ -294,7 +297,7 @@ void USoundPropagationComponent::SetPropagatedSoundVolume(const UAudioComponent*
 	// Interpolates volume changes to it is not as abrupt 
 	const float NewVolume = FMath::FInterpConstantTo(PropAudioComp->VolumeMultiplier, TargetVolume, DeltaTime, PropVolumeLerpSpeed); 
 
-	UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
+	// UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
 	
 	PropAudioComp->SetVolumeMultiplier(NewVolume); 
 }

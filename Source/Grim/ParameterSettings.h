@@ -20,9 +20,12 @@ public:
 	static UParameterSettings* GetParamSettings(); 
 	
 	UPROPERTY(Config, BlueprintReadOnly)
-	bool SoundPropEnable = true; 
+	bool AudioSystemEnable = true; 
 
 	UPROPERTY(Config, BlueprintReadOnly)
-	bool PlayImmersiveSoundFile = true; 
+	bool PlayImmersiveSoundFile = true;
+
+	UPROPERTY(Config, BlueprintReadOnly)
+	float ChasingEntitySpeed = 120.f; 
 	
 };

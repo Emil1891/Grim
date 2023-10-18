@@ -3,6 +3,7 @@
 
 #include "AudioOcclusionComponent.h"
 
+#include "ParameterSettings.h"
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -21,6 +22,8 @@ UAudioOcclusionComponent::UAudioOcclusionComponent()
 void UAudioOcclusionComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	bEnabled = UParameterSettings::GetParamSettings()->AudioSystemEnable;
 	
 	// Dont set up component and dont tick if disabled 
 	if(!bEnabled)
