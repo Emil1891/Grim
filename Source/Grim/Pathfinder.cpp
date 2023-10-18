@@ -3,6 +3,8 @@
 
 #include "Pathfinder.h"
 #include "MapGrid.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "SoundPropagationComponent.h"
 
 // Tried overloading comparison operator (<) in GridNode class but did not seem to work,
 // using a predicate does seem to work even though it is somewhat clunkier
@@ -14,13 +16,11 @@ namespace
 	};
 }
 
-FPathfinder::FPathfinder(AMapGrid* Grid) : Grid(Grid)
+FPathfinder::FPathfinder(AMapGrid* Grid, AActor* Player, USoundPropagationComponent* PropComp) : Grid(Grid), Player(Player), PropComp(PropComp)
 {
-	if(!Grid)
-		UE_LOG(LogTemp, Error, TEXT("No map grid found in level"))
 }
 
-bool FPathfinder::FindPath(const FVector& From, const FVector& To, TArray<FGridNode*>& Path)
+bool FPathfinder::FindPath(const FVector& From, const FVector& To, TArray<FGridNode*>& Path, bool& bOutPlayerHasMoved)
 {
 	FGridNode* StartNode = Grid->GetNodeFromWorldLocation(From); 
 	FGridNode* EndNode = GetTargetNode(To);
@@ -31,9 +31,15 @@ bool FPathfinder::FindPath(const FVector& From, const FVector& To, TArray<FGridN
 
 	// Target has not moved, simply return 
 	if(EndNode == OldEndNode)
+	{
+		bOutPlayerHasMoved = false; 
 		return true;
+	}
+
+	bOutPlayerHasMoved = true; 
 	
-	// this if will be removed, bad way of forcing path draw each frame by always updating the path 
+	// TODO: remove if, bad way of forcing path draw each frame by always updating the path (not calculating path
+	// TODO: every frame is bugged as of now) 
 	if(!Grid->bDrawPath) 
 		OldEndNode = EndNode; 
 
@@ -95,15 +101,23 @@ bool FPathfinder::FindPath(const FVector& From, const FVector& To, TArray<FGridN
 
 FGridNode* FPathfinder::GetTargetNode(const FVector& TargetLocation) const
 {
-	FGridNode* TargetNode = Grid->GetNodeFromWorldLocation(TargetLocation); 
+	FGridNode* TargetNode = Grid->GetNodeFromWorldLocation(TargetLocation);
 
-	// If player resides in an un-walkable node, check its neighbours for a walkable node 
+	const TArray<AActor*> ActorsToIgnore { Player }; 
+
+	// If player resides in an un-walkable node, check its neighbours for a walkable node with line of sight to player
+	// The player's node can become a node on other side of walls if it was not for the line trace 
 	if(!TargetNode->IsWalkable())
 	{
 		for(const auto Neighbour : Grid->GetNeighbours(TargetNode))
 		{
 			if(Neighbour->IsWalkable())
-				return Neighbour; 
+			{
+				// Neighbour is valid if no hit occured for the line trace, i.e. has line of sight to player 
+				FHitResult HitResult; 
+				if(!UKismetSystemLibrary::LineTraceSingleForObjects(PropComp, Neighbour->GetWorldCoordinate(), Player->GetActorLocation(), PropComp->AudioBlockingTypes, false, ActorsToIgnore, EDrawDebugTrace::ForOneFrame, HitResult, true)) 
+					return Neighbour;
+			}
 		}
 	}
 	
@@ -136,17 +150,9 @@ TArray<FGridNode*> FPathfinder::GetPath(const FGridNode* StartNode, FGridNode* E
 
 int FPathfinder::GetCostToNode(const FGridNode* From, const FGridNode* To) const
 {
-	// Source: https://www.math.usm.edu/lambers/mat169/fall09/lecture17.pdf (page 3)
-	// Returns the distance between nodes, ignoring obstacles 
-	const float Distance = FMath::Sqrt(static_cast<float>(FMath::Square(To->GridX - From->GridX)) +
-		FMath::Square(To->GridY - From->GridY) + FMath::Square(To->GridZ - From->GridZ)); 
-
-	// Note: I don't think is is entirely accurate since the path can only move between nodes and not diagonally across
-	// multiple nodes (hard to describe) which is why A* algos usually use their own solution with 10, 14 etc. costs
-	// i dont think its a problem for us though since we do not need such an accurate path but might be more effective?
-	return FMath::RoundToInt(Distance); 
-}
-
-FPathfinder::~FPathfinder()
-{
+	// Euclidean distance (The dot product of a vector with itself is its magnitude squared) 
+	const FVector DirectionalVector = To->GetWorldCoordinate() - From->GetWorldCoordinate(); 
+	// Should return sqrt of Dot Product (or just DirVec.Size) but I think it gives better result without it,
+	// (although I think it punishes diagonal movement?) 
+	return DirectionalVector.Dot(DirectionalVector); // Seems to be the best (and fastest) approach 
 }

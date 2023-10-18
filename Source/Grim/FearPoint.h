@@ -34,4 +34,7 @@ private:
 	// The max range at which the player's fear will be affected 
 	UPROPERTY(EditAnywhere, meta=(Units = "cm"))
 	float MaxRange = 1000.f;
+
+	UPROPERTY(EditAnywhere, meta=(UIMin=0, UIMax=1, ClampMin=0, ClampMax=1))
+	float PointBehindPlayerMultiplier = 0.5f; 
 };

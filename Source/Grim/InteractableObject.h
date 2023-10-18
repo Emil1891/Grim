@@ -20,6 +20,13 @@ public:
 	// Sets default values for this actor's properties
 	AInteractableObject();
 
+	bool IsInteractable() const { return bIsInteractable; }
+
+	void SetIsInteractable(const bool bNewInteractable) { bIsInteractable = bNewInteractable; }
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bIsInteractable = true;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -35,33 +42,32 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* TriggerZone;
 	
-public:	
-	bool IsInteractable() const { return bIsInteractable; }
 
-	void SetIsInteractable(const bool bNewInteractable) { bIsInteractable = bNewInteractable; }
+	UPROPERTY(EditAnywhere)
+	float InteractFadeOutDuration = 0.3f;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool bIsInteractable = true; 
+	// The audio player handling sound to play when in the interaction zone 
+	UPROPERTY(EditAnywhere)
+	UAudioComponent* InteractAudioPlayer; 
 
+	bool bPlayerIsInZone = false;
+	
+	// called when an actor exits the trigger zone
+	UFUNCTION()
+	virtual void TriggerZoneExited(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+							UPrimitiveComponent* OtherComponent, int OtherBodyIndex);
+	
+	// called when an actor enters the trigger zone
+	UFUNCTION()
+	virtual void TriggerZoneEntered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	                                UPrimitiveComponent* OtherComponent, int OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 private:
 
 	UPROPERTY()
 	APawn* Player;
 
 	void PlayerInteracted();
-
-	// called when an actor enters the trigger zone
-	UFUNCTION()
-	void TriggerZoneEntered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-							UPrimitiveComponent* OtherComponent, int OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
-
-	// called when an actor exits the trigger zone
-	UFUNCTION()
-	void TriggerZoneExited(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-							UPrimitiveComponent* OtherComponent, int OtherBodyIndex);
-
-	bool bPlayerIsInZone = false;
-
+	
 	// Sound to play when the player enters the trigger zone and can interact (looping sound)
 	UPROPERTY(EditAnywhere)
 	USoundBase* InteractEnterSound = nullptr;
@@ -69,14 +75,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	bool bCanOnlyInteractOnce = false;
 
-	// The audio player handling sound to play when in the interaction zone 
-	UPROPERTY(EditAnywhere)
-	UAudioComponent* InteractAudioPlayer;
-
 	UPROPERTY(EditAnywhere)
 	float InteractFadeInDuration = 1.f;
-
-	UPROPERTY(EditAnywhere)
-	float InteractFadeOutDuration = 0.3f; 
-
 };

@@ -39,6 +39,19 @@ float UAudioPlayTimes::GetPlayTime(const UAudioComponent* AudioComp) const
 	return -1; 
 }
 
+void UAudioPlayTimes::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	TArray<UAudioComponent*> AudioComps;
+	PlayTimes.GetKeys(AudioComps); 
+	for(const auto AudioComp : AudioComps)
+	{
+		if(IsValid(AudioComp))
+			AudioComp->GetOwner()->OnDestroyed.RemoveDynamic(this, &UAudioPlayTimes::ActorWithCompDestroyed); 
+	}
+}
+
 void UAudioPlayTimes::OnPlayBackChanged(const USoundWave* PlayingSoundWave, const float PlayBackPercent)
 {
 	// Since the event only passes the sound playing and not the audio component, we first have to find the audio comp
@@ -66,4 +79,6 @@ void UAudioPlayTimes::ActorWithCompDestroyed(AActor* DestroyedActor)
 		if(auto AudioComp = Cast<UAudioComponent>(Comp))
 			PlayTimes.Remove(AudioComp); 
 	}
+	
+	DestroyedActor->OnDestroyed.RemoveDynamic(this, &UAudioPlayTimes::ActorWithCompDestroyed); 
 }

@@ -22,6 +22,10 @@ void AFearPoint::BeginPlay()
 float AFearPoint::GetFearLevel() const
 {
 	const float DistToPlayer = FVector::Dist(GetActorLocation(), Player->GetActorLocation());
-	
+
+	// Lower value if the point is behind the player 
+	if(Player->GetActorForwardVector().Dot(GetActorLocation() - Player->GetActorLocation()) < 0)
+		return  DistToPlayer > MaxRange ? 0 : (1 - (DistToPlayer / MaxRange)) * PointBehindPlayerMultiplier;
+
 	return  DistToPlayer > MaxRange ? 0 : 1 - (DistToPlayer / MaxRange); 
 }

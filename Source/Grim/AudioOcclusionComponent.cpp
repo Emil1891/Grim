@@ -3,8 +3,6 @@
 
 #include "AudioOcclusionComponent.h"
 
-#include "AITypes.h"
-#include "AudioPlayTimes.h"
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -36,6 +34,17 @@ void UAudioOcclusionComponent::BeginPlay()
 	CameraComp = GetOwner()->FindComponentByClass<UCameraComponent>();
 }
 
+void UAudioOcclusionComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	for(const auto AudioComp : AudioComponents)
+	{
+		if(IsValid(AudioComp))
+			AudioComp->GetOwner()->OnDestroyed.RemoveDynamic(this, &UAudioOcclusionComponent::ActorWithCompDestroyed); 
+	}
+}
+
 // Called every frame
 void UAudioOcclusionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
@@ -45,7 +54,7 @@ void UAudioOcclusionComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 		return;
 	
 	// Gets all audio components in the level, now every tick in case of spawned audio 
-	//SetAudioComponents();
+	// SetAudioComponents();
 
 	// Add to timer 
 	LowPassTimer += DeltaTime;
@@ -89,8 +98,12 @@ void UAudioOcclusionComponent::SetAudioComponents()
 	for(const auto Actor : AllFoundActors)
 	{
 		// TODO: ONLY FOR DEBUGGING TO REMOVE UNWANTED SOUNDS
-		 if(bOnlyUseDebugSound && !Actor->GetActorNameOrLabel().Equals("TestSound"))
+		 if(bOnlyUseDebugSound && !Actor->GetActorNameOrLabel().Equals("TestSound")) 
 		 	continue;
+
+		// Check if actor is of a class that should be ignored 
+		if(ActorShouldBeIgnored(Actor))
+			continue; 
 		
 		// If the actor has audio components 
 		TArray<UActorComponent*> Comps;
@@ -112,9 +125,20 @@ void UAudioOcclusionComponent::SetAudioComponents()
 	}
 }
 
+bool UAudioOcclusionComponent::ActorShouldBeIgnored(const AActor* Actor)
+{
+	for(const auto UnwantedClass : ActorClassesToIgnore)
+	{
+		if(Actor->GetClass()->IsChildOf(UnwantedClass))
+			return true; 
+	}
+
+	return false; 
+}
+
 bool UAudioOcclusionComponent::DoLineTrace(TArray<FHitResult>& HitResultsOut, const FVector& StartLocation, const FVector& EndLocation, const TArray<AActor*>& ActorsToIgnore) const
 {
-	return UKismetSystemLibrary::LineTraceMultiForObjects(GetWorld(), StartLocation, EndLocation, ObjectsToQuery, false, ActorsToIgnore, EDrawDebugTrace::ForOneFrame, HitResultsOut, true); 
+	return UKismetSystemLibrary::LineTraceMultiForObjects(GetWorld(), StartLocation, EndLocation, AudioBlockingTypes, false, ActorsToIgnore, EDrawDebugTrace::ForOneFrame, HitResultsOut, true); 
 }
 
 void UAudioOcclusionComponent::UpdateAudioComp(UAudioComponent* AudioComp, const float DeltaTime)
@@ -153,7 +177,7 @@ void UAudioOcclusionComponent::UpdateAudioComp(UAudioComponent* AudioComp, const
 
 	// Subtract the volume multiplier with the total occlusion value to determine how low the sound should be, higher
 	// occlusion means lower volume 
-	AudioComp->SetVolumeMultiplier(1 - TotalOccValue);
+	AudioComp->SetVolumeMultiplier(FMath::Clamp(1 - TotalOccValue, 0.01f, 1)); 
 
 	// Update LowPass only at set interval for optimization 
 	if(LowPassTimer > LowPassUpdateDelay)
@@ -254,7 +278,9 @@ void UAudioOcclusionComponent::ActorWithCompDestroyed(AActor* DestroyedActor)
 	DestroyedActor->GetComponents(UAudioComponent::StaticClass(), Comps);
 	for(const auto Comp : Comps)
 	{
-		if(auto AudioComp = Cast<UAudioComponent>(Comp))
+		if(auto AudioComp = Cast<UAudioComponent>(Comp)) 
 			AudioComponents.Remove(AudioComp); 
 	}
+
+	DestroyedActor->OnDestroyed.RemoveDynamic(this, &UAudioOcclusionComponent::ActorWithCompDestroyed); 
 }

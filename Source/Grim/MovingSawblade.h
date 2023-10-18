@@ -24,12 +24,5 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 private:
-	UPROPERTY(EditAnywhere, meta=(AllowPrivateAccess=true))
-	TArray<FVector> Positions;
-	
-	UPROPERTY(VisibleAnywhere)
-	int TargetPosition = 1;
-	
-	UPROPERTY(EditAnywhere)
-	float LerpSpeed = 0.05;
+
 };

@@ -35,8 +35,11 @@ void ABallRoomInstrument::ResetToIdleSound()
 	AudioPlayer->SetVolumeMultiplier(1);
 	ActiveAudioPlayer->SetVolumeMultiplier(0);
 
-	// make the instrument interactable again 
-	SetIsInteractable(true); 
+	// make the instrument interactable again if player is not in the zone 
+	if(!bPlayerIsInZone)
+		SetIsInteractable(true);
+
+	// If player is in the zone, it will be interactable again when they exit 
 }
 
 void ABallRoomInstrument::InteractSuccessful()
@@ -50,8 +53,41 @@ void ABallRoomInstrument::InteractSuccessful()
 	AudioPlayer->SetVolumeMultiplier(0);
 	ActiveAudioPlayer->SetVolumeMultiplier(1);
 
+	// Turn off the interact zone sound on interact 
+	InteractAudioPlayer->FadeOut(InteractFadeOutDuration, 0); 
+
 	// Turn off interactability so it cannot be interacted with when "active" 
 	SetIsInteractable(false);
 	
 	PuzzleManager->PlayerInteractedWithInstrument(this);
+}
+
+void ABallRoomInstrument::TriggerZoneExited(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComponent, int OtherBodyIndex)
+{
+	Super::TriggerZoneExited(OverlappedComponent, OtherActor, OtherComponent, OtherBodyIndex);
+
+	// if the instrument is not playing its active sound, then enable interaction
+	// forcing the player to exit the zone if the last instrument when failing the puzzle 
+	if(ActiveAudioPlayer->VolumeMultiplier == 0)
+		SetIsInteractable(true);
+
+	// Reset idle audio player on exit, depending on if player activated it or not 
+	if(ActiveAudioPlayer->VolumeMultiplier == 0)
+		AudioPlayer->SetVolumeMultiplier(1);
+	else
+		AudioPlayer->SetVolumeMultiplier(0);
+}
+
+void ABallRoomInstrument::TriggerZoneEntered(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComponent, int OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	Super::TriggerZoneEntered(OverlappedComponent, OtherActor, OtherComponent, OtherBodyIndex, bFromSweep, SweepResult);
+
+	// Has not activated the instrument 
+	if(ActiveAudioPlayer->VolumeMultiplier == 0)
+	{
+		// Boost the volume so player can easier distinguish which instrument they will interact with 
+		AudioPlayer->SetVolumeMultiplier(VolumeMultWhenInZone); 
+	}
 }

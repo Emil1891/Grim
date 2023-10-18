@@ -4,6 +4,8 @@
 
 #include "FearPoint.h"
 #include "Components/AudioComponent.h"
+#include "Components/ForceFeedbackComponent.h"
+#include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 
 AGrimPlayerState::AGrimPlayerState()
@@ -24,7 +26,13 @@ void AGrimPlayerState::BeginPlay()
 	// set up the audio component handling fear level and the heartbeat 
 	FearAudioComponent = UGameplayStatics::CreateSound2D(this, FearSoundCue);
 	FearAudioComponent->SetFloatParameter(FName("Proximity"), 1);
-	FearAudioComponent->Play(); 
+	FearAudioComponent->Play();
+
+	if(ForceFeedbackEffect)
+	{
+		ForceFeedbackComponent = UGameplayStatics::SpawnForceFeedbackAttached(ForceFeedbackEffect, GetPlayerController()->GetCharacter()->GetRootComponent(), NAME_None, FVector(0), FRotator(0), EAttachLocation::KeepRelativeOffset, false, true, 1, 0);
+		ForceFeedbackEffect->Duration = VibrationDuration;
+	}
 }
 
 void AGrimPlayerState::SetFearLevel()
@@ -38,7 +46,6 @@ void AGrimPlayerState::SetFearLevel()
 		if(FearPointFearLevel > MaxFear)
 			MaxFear = FearPointFearLevel; 
 	}
-
 	FearLevel = MaxFear;
 }
 
@@ -47,7 +54,9 @@ void AGrimPlayerState::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	
 	SetFearLevel();
-
+	
 	// update the fear/proximity value in the audio component 
 	FearAudioComponent->SetFloatParameter(FName("Proximity"), FearLevel);
+
+	ForceFeedbackComponent->IntensityMultiplier = std::sqrt(FearLevel)/2 - .27f;
 }
