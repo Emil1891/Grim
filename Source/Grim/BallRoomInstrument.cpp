@@ -50,7 +50,7 @@ void ABallRoomInstrument::InteractSuccessful()
 	
 	Super::InteractSuccessful();
 
-	AudioPlayer->SetVolumeMultiplier(0);
+	AudioPlayer->SetVolumeMultiplier(0.01f);
 	ActiveAudioPlayer->SetVolumeMultiplier(1);
 
 	// Turn off the interact zone sound on interact 
