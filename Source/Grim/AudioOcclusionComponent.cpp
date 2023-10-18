@@ -3,8 +3,6 @@
 
 #include "AudioOcclusionComponent.h"
 
-#include "AITypes.h"
-#include "AudioPlayTimes.h"
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
