@@ -20,11 +20,6 @@ public:
 	void PlayerInteractedWithInstrument(AInteractableAudioPlayer* Instrument); 
 
 	bool IsPuzzleComplete() const { return bPuzzleComplete; }
-
-	// Returns the current play time for the passed audio component or -1 if the audio component does not exist 
-	float GetPlayTime(const UAudioComponent* AudioComp) const;
-	
-	void SetPlayTimes(UAudioComponent* IdleInstrument); 
 	
 private:
 
@@ -41,16 +36,9 @@ private:
 	// Rests puzzle upon failure 
 	void ResetPuzzle();
 
-	UFUNCTION()
-	void OnPlayBackChanged(const USoundWave* PlayingSoundWave, float PlayBackPercent);
-
 	bool bPuzzleComplete = false;
 
 	UPROPERTY(EditAnywhere)
 	USoundBase* PuzzleFailedSound = nullptr;
-
-	// Map holding music instruments and their sound's current playtime
-	UPROPERTY()
-	TMap<UAudioComponent*, float> PlayTimes;
 
 };
