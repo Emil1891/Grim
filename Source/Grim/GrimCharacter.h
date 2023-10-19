@@ -80,6 +80,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetCurrentAudioInstructions(USoundBase* NewAudioInstructions);
 
+	bool IsDead() const { return bIsDead; }
+
 private:
 	UPROPERTY()
 	FVector SpawnLocation;
