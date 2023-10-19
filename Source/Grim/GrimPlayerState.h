@@ -53,4 +53,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	UForceFeedbackComponent* ForceFeedbackComponent;
+
+	UPROPERTY()
+	class AGrimCharacter* Player; 
 };

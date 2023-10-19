@@ -46,5 +46,9 @@ private:
 	UAudioComponent* ActiveAudioPlayer;
 
 	UPROPERTY(EditAnywhere)
-	float VolumeMultWhenInZone = 1.5f; 
+	float VolumeMultWhenInZone = 1.5f;
+
+	float MusicClipLength = 15.f;
+
+	float GetPlayTime() const; 
 };

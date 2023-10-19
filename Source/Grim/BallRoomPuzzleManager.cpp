@@ -5,6 +5,7 @@
 
 #include "BallRoomInstrument.h"
 #include "QuestDoor.h"
+#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -46,8 +47,8 @@ void ABallRoomPuzzleManager::ResetPuzzle()
 	PlayerInputOrder.Empty();
 
 	// and resetting every instrument to idle sound
-	for(auto Instrument : CorrectInstrumentOrder)
-		if(auto BallInstrument = Cast<ABallRoomInstrument>(Instrument))
+	for(const auto Instrument : CorrectInstrumentOrder)
+		if(const auto BallInstrument = Cast<ABallRoomInstrument>(Instrument))
 			BallInstrument->ResetToIdleSound();
 	
 	if(PuzzleFailedSound)
@@ -55,4 +56,3 @@ void ABallRoomPuzzleManager::ResetPuzzle()
 
 	UE_LOG(LogTemp, Warning, TEXT("Puzzle failed"))
 }
-

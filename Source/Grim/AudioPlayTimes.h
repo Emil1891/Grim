@@ -35,7 +35,8 @@ protected:
 
 private:
 
-	// Map holding all audio components and their sound's current playtime 
+	// Map holding all audio components and their sound's current playtime
+	UPROPERTY()
 	TMap<UAudioComponent*, float> PlayTimes; 
 
 	UFUNCTION()

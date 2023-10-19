@@ -23,7 +23,7 @@ void ADoor::InteractSuccessful()
 
 	// simply play audio and destroy the door for now, animation later 
 	if(DoorOpenSound)
-		UGameplayStatics::PlaySoundAtLocation(this, DoorOpenSound, GetActorLocation()); 
+		UGameplayStatics::PlaySoundAtLocation(this, DoorOpenSound, InteractAudioPlayer->GetComponentLocation()); 
 
 	// Destroy with delay so interact sound can fade out 
 	SetLifeSpan(InteractFadeOutDuration);

@@ -27,12 +27,15 @@ void ABallRoomInstrument::BeginPlay()
 
 	if(!ActiveSound || !IdleSound)
 		UE_LOG(LogTemp, Error, TEXT("No idle or active sound!"))
+
+	MusicClipLength = ActiveSound->Duration;
 }
 
 void ABallRoomInstrument::ResetToIdleSound()
 {
 	// Turns on idle sound and turns off active sound by adjusting volume to keep everything in sync 
 	AudioPlayer->SetVolumeMultiplier(1);
+	AudioPlayer->Play(GetPlayTime());
 	ActiveAudioPlayer->SetVolumeMultiplier(0.01f);
 
 	// make the instrument interactable again if player is not in the zone 
@@ -52,6 +55,7 @@ void ABallRoomInstrument::InteractSuccessful()
 
 	AudioPlayer->SetVolumeMultiplier(0.01f);
 	ActiveAudioPlayer->SetVolumeMultiplier(1);
+	ActiveAudioPlayer->Play(GetPlayTime()); 
 
 	// Turn off the interact zone sound on interact 
 	InteractAudioPlayer->FadeOut(InteractFadeOutDuration, 0.01f); 
@@ -72,7 +76,8 @@ void ABallRoomInstrument::TriggerZoneExited(UPrimitiveComponent* OverlappedCompo
 	if(ActiveAudioPlayer->VolumeMultiplier < 0.1f)
 	{
 		SetIsInteractable(true);
-		AudioPlayer->SetVolumeMultiplier(1); // Reset idle audio player on exit, depending on if player activated it or not 
+		AudioPlayer->SetVolumeMultiplier(1); // Reset idle audio player on exit, depending on if player activated it or not;
+		AudioPlayer->Play(GetPlayTime()); 
 	}
 	else
 		AudioPlayer->SetVolumeMultiplier(0.01f);
@@ -89,4 +94,9 @@ void ABallRoomInstrument::TriggerZoneEntered(UPrimitiveComponent* OverlappedComp
 		// Boost the volume so player can easier distinguish which instrument they will interact with 
 		AudioPlayer->SetVolumeMultiplier(VolumeMultWhenInZone); 
 	}
+}
+
+float ABallRoomInstrument::GetPlayTime() const
+{
+	return FMath::Fmod(GetWorld()->GetTimeSeconds(), 15.f); 
 }

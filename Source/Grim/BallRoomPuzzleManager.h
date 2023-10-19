@@ -19,7 +19,7 @@ public:
 
 	void PlayerInteractedWithInstrument(AInteractableAudioPlayer* Instrument); 
 
-	bool IsPuzzleComplete() const { return bPuzzleComplete; } 
+	bool IsPuzzleComplete() const { return bPuzzleComplete; }
 	
 private:
 
@@ -39,5 +39,6 @@ private:
 	bool bPuzzleComplete = false;
 
 	UPROPERTY(EditAnywhere)
-	USoundBase* PuzzleFailedSound = nullptr; 
+	USoundBase* PuzzleFailedSound = nullptr;
+
 };
