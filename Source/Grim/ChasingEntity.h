@@ -25,6 +25,9 @@ public:
 
 	void StartMoving();
 	
+	UFUNCTION(BlueprintImplementableEvent)
+	void StartMovingEvent();
+	
 private:
 	UFUNCTION()
 	void OnOverlapTriggerBox(
@@ -59,7 +62,7 @@ private:
 	int TargetPosition = 1;
 	
 	UPROPERTY(EditAnywhere)
-	float LerpSpeed = 0.005;
+	float LerpSpeed = 1;
 
 	UPROPERTY(EditAnywhere)
 	bool bShouldMove = false;
@@ -75,4 +78,10 @@ private:
 	
 	UPROPERTY(EditDefaultsOnly)
 	USoundBase* CombustionSound;
+	
+	UPROPERTY(EditDefaultsOnly)
+	USoundBase* PressurePlateSound;
+		
+	UPROPERTY(EditDefaultsOnly)
+	USoundBase* ExplosionSound;
 };
