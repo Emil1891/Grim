@@ -5,6 +5,7 @@
 
 #include "BallRoomInstrument.h"
 #include "QuestDoor.h"
+#include "Components/AudioComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -40,14 +41,22 @@ void ABallRoomPuzzleManager::PlayerInteractedWithInstrument(AInteractableAudioPl
 	}
 }
 
+float ABallRoomPuzzleManager::GetPlayTime(const UAudioComponent* AudioComp) const
+{
+	if(PlayTimes.Contains(AudioComp)) 
+		return PlayTimes[AudioComp];
+
+	return -1; 
+}
+
 void ABallRoomPuzzleManager::ResetPuzzle()
 {
 	// reset puzzle by emptying the array 
 	PlayerInputOrder.Empty();
 
 	// and resetting every instrument to idle sound
-	for(auto Instrument : CorrectInstrumentOrder)
-		if(auto BallInstrument = Cast<ABallRoomInstrument>(Instrument))
+	for(const auto Instrument : CorrectInstrumentOrder)
+		if(const auto BallInstrument = Cast<ABallRoomInstrument>(Instrument))
 			BallInstrument->ResetToIdleSound();
 	
 	if(PuzzleFailedSound)
@@ -56,3 +65,29 @@ void ABallRoomPuzzleManager::ResetPuzzle()
 	UE_LOG(LogTemp, Warning, TEXT("Puzzle failed"))
 }
 
+void ABallRoomPuzzleManager::OnPlayBackChanged(const USoundWave* PlayingSoundWave, const float PlayBackPercent)
+{
+	// Since the event only passes the sound playing and not the audio component, we first have to find the audio comp
+	// playing this sound. This causes a problem when multiple audio comps are playing the same sound 
+	for(const auto [AudioComp, PlayTime] : PlayTimes)
+	{
+		if(AudioComp->GetSound() == PlayingSoundWave)
+		{
+			// Sounds that loop get percentage of over 1 so need to get rid of the integer part of the number 
+			const float RealPlaybackPercent = FMath::Fmod(PlayBackPercent, 1); 
+			//UE_LOG(LogTemp, Warning, TEXT("Play time: %f"), RealPlaybackPercent * PlayingSoundWave->Duration)
+			PlayTimes[AudioComp] = RealPlaybackPercent * PlayingSoundWave->Duration;
+			
+			return; 
+		}
+	}
+}
+
+void ABallRoomPuzzleManager::SetPlayTimes(UAudioComponent* IdleInstrument)
+{
+	// Bind event to call when sound play time changes 
+	IdleInstrument->OnAudioPlaybackPercent.AddDynamic(this, &ABallRoomPuzzleManager::OnPlayBackChanged);
+	IdleInstrument->Play(); // Needs to call play for some reason for it to work 
+	
+	PlayTimes.Add(IdleInstrument);
+}
