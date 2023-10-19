@@ -3,6 +3,7 @@
 #include "GrimPlayerState.h"
 
 #include "FearPoint.h"
+#include "GrimCharacter.h"
 #include "Components/AudioComponent.h"
 #include "Components/ForceFeedbackComponent.h"
 #include "GameFramework/Character.h"
@@ -33,12 +34,20 @@ void AGrimPlayerState::BeginPlay()
 		ForceFeedbackComponent = UGameplayStatics::SpawnForceFeedbackAttached(ForceFeedbackEffect, GetPlayerController()->GetCharacter()->GetRootComponent(), NAME_None, FVector(0), FRotator(0), EAttachLocation::KeepRelativeOffset, false, true, 1, 0);
 		ForceFeedbackEffect->Duration = VibrationDuration;
 	}
+
+	Player = Cast<AGrimCharacter>(UGameplayStatics::GetPlayerPawn(this, 0)); 
 }
 
 void AGrimPlayerState::SetFearLevel()
 {
 	// Finds the highest fear level (nearer to 1 means more fear)
 	float MaxFear = 0;
+
+	if(Player->IsDead())
+	{
+		FearLevel = 0; 
+		return;
+	}
 	
 	for(auto FearPoint : AllFearPoints)
 	{
