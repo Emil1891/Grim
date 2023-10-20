@@ -1,7 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "GrimCharacter.h"
-#include "GrimProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -9,6 +8,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
 
+DEFINE_LOG_CATEGORY(LogDeath);
 
 //////////////////////////////////////////////////////////////////////////
 // AGrimCharacter
@@ -126,6 +126,23 @@ void AGrimCharacter::Respawn(const float DelayTime)
 {
 	if( !bIsDead )
 	{
+		UE_LOG(LogDeath, Log, TEXT("Time since map start: %f sec. :: Level: %s :: Died at location: %s"),
+			GetGameTimeSinceCreation(),
+			*UGameplayStatics::GetCurrentLevelName(this),
+			*GetActorLocation().ToString()
+		);
+		FFileHelper::SaveStringToFile(
+			*FString::Printf(
+				TEXT("\nTime since map start: %f sec. :: Level: %s :: Died at location: %s"),
+				GetGameTimeSinceCreation(),
+				*UGameplayStatics::GetCurrentLevelName(this),
+				*GetActorLocation().ToString()
+			),
+			*FPaths::ProjectLogDir().Append(TEXT("DeathLog.txt")),
+			FFileHelper::EEncodingOptions::AutoDetect,
+			&IFileManager::Get(),
+			FILEWRITE_Append
+		);
 		FTimerHandle DelayHandle;
 		FTimerDelegate DelayDelegate;
 		bIsDead = true;

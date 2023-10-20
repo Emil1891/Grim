@@ -7,6 +7,8 @@
 #include "InputActionValue.h"
 #include "GrimCharacter.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogDeath, Log, All);
+
 class UInputComponent;
 class USkeletalMeshComponent;
 class USceneComponent;
@@ -18,7 +20,7 @@ UCLASS(config=Game)
 class AGrimCharacter : public ACharacter
 {
 	GENERATED_BODY()
-
+	
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
 	USkeletalMeshComponent* Mesh1P;
