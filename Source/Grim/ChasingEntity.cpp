@@ -47,7 +47,7 @@ void AChasingEntity::Tick(float DeltaTime)
 		{
 			FVector Movement = FMath::VInterpConstantTo(GetActorLocation(), Positions[TargetPosition], DeltaTime, ActiveLerpSpeed);
 			SetActorLocation(Movement);
-			GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, FString::SanitizeFloat(ActiveLerpSpeed));
+			//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, FString::SanitizeFloat(ActiveLerpSpeed));
 			if( UE::Geometry::Distance(GetActorLocation(), Positions[TargetPosition]) < 5.f )
 			{
 				if( TargetPosition == Positions.Num() - 1 )
@@ -104,7 +104,7 @@ void AChasingEntity::OnOverlapTriggerBox(
 	//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, TEXT("Start overlap."));
 	if( Cast<AGrimCharacter>(OtherActor) )
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, TEXT("Starting move."));
+		//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, TEXT("Starting move."));
 		StartMoving();
 		TriggerCollisionBox->SetGenerateOverlapEvents(false);
 		UGameplayStatics::SpawnSound2D(TriggerCollisionBox, PressurePlateSound);
