@@ -51,7 +51,7 @@ void AGrimCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-	SpawnLocation = GetActorLocation();
+	SpawnTransform = GetActorTransform();
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -122,26 +122,26 @@ bool AGrimCharacter::GetHasRifle()
 	return bHasRifle;
 }
 
-void AGrimCharacter::Respawn()
+void AGrimCharacter::Respawn(const float DelayTime)
 {
 	if( !bIsDead )
 	{
-		SetActorEnableCollision(false);
-		//SetActorLocation(SpawnLocation);
 		FTimerHandle DelayHandle;
 		FTimerDelegate DelayDelegate;
+		bIsDead = true;
+		SetActorEnableCollision(false);
+		DisableInput(Cast<APlayerController>(GetController()));
+		RespawnTrigger();
 		DelayDelegate.BindLambda([this] {
 			if( bIsDead == true )
 			{
-				UGameplayStatics::OpenLevel(this, FName(UGameplayStatics::GetCurrentLevelName(this)));
+				SetActorTransform(SpawnTransform);
 				SetActorEnableCollision(true);
+				EnableInput(Cast<APlayerController>(GetController()));
+				bIsDead = false;
 			}
 		});
-	
-		DisableInput(Cast<APlayerController>(GetController()));
-		RespawnTrigger();
-		GetWorldTimerManager().SetTimer(DelayHandle, DelayDelegate, 2.f, false);
-		bIsDead = true;
+		GetWorldTimerManager().SetTimer(DelayHandle, DelayDelegate, DelayTime, false);
 	}
 }
 

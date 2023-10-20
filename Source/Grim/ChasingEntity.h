@@ -48,6 +48,12 @@ private:
 		bool bFromSweep,
 		const FHitResult& SweepResult
 		);
+
+	UFUNCTION()
+	void Reset();
+	
+	UPROPERTY()
+	FTransform SpawnTransform;
 	
 	UPROPERTY(EditDefaultsOnly)
 	UBoxComponent* DeathCollisionBox;
@@ -72,6 +78,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float MaxAllowedDistance = 5000;
+
+	UPROPERTY()
+	UAudioComponent* AudioComponent;
 	
 	UPROPERTY(EditDefaultsOnly)
 	USoundBase* StartSound;

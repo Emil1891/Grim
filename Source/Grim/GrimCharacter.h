@@ -67,7 +67,7 @@ public:
 	bool GetHasRifle();
 	
 	UFUNCTION(BlueprintCallable, Category = Respawn)
-    void Respawn();
+    void Respawn(const float DelayTime = 2.f);
     
 	UFUNCTION(BlueprintImplementableEvent)
 	void RespawnTrigger();
@@ -80,11 +80,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetCurrentAudioInstructions(USoundBase* NewAudioInstructions);
 
+	UFUNCTION(BlueprintCallable)
 	bool IsDead() const { return bIsDead; }
 
 private:
 	UPROPERTY()
-	FVector SpawnLocation;
+	FTransform SpawnTransform;
 
 	UPROPERTY(EditAnywhere)
 	TArray<FName> TagsToCheck {
