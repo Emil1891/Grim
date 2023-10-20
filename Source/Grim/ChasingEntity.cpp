@@ -26,8 +26,8 @@ void AChasingEntity::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//DefaultLerpSpeed = UParameterSettings::GetParamSettings()->ChasingEntitySpeed;
-	DefaultLerpSpeed = 200;
+	DefaultLerpSpeed = UParameterSettings::GetParamSettings()->ChasingEntitySpeed;
+	//DefaultLerpSpeed = 200;
 }
 
 void AChasingEntity::Tick(float DeltaTime)
