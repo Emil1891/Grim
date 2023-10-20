@@ -25,17 +25,29 @@ AChasingEntity::AChasingEntity()
 void AChasingEntity::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//DefaultLerpSpeed = UParameterSettings::GetParamSettings()->ChasingEntitySpeed;
+	DefaultLerpSpeed = 200;
 }
 
 void AChasingEntity::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if(UE::Geometry::Distance(GetActorLocation(), UGameplayStatics::GetPlayerCharacter(GetWorld(),0)->GetActorLocation()) >= MaxAllowedDistance)
+	{
+		ActiveLerpSpeed = DefaultLerpSpeed*2;
+	}
+	else if(UE::Geometry::Distance(GetActorLocation(), UGameplayStatics::GetPlayerCharacter(GetWorld(),0)->GetActorLocation()) < MaxAllowedDistance)
+	{
+		ActiveLerpSpeed = DefaultLerpSpeed;
+	}
+	
 	if( bShouldMove ) {
 		if( Positions.Num() > 0 )
 		{
-			FVector Movement = FMath::VInterpConstantTo(GetActorLocation(), Positions[TargetPosition], DeltaTime, LerpSpeed);
+			FVector Movement = FMath::VInterpConstantTo(GetActorLocation(), Positions[TargetPosition], DeltaTime, ActiveLerpSpeed);
 			SetActorLocation(Movement);
-			//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, FString::SanitizeFloat(LerpSpeed));
+			GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, FString::SanitizeFloat(ActiveLerpSpeed));
 			if( UE::Geometry::Distance(GetActorLocation(), Positions[TargetPosition]) < 5.f )
 			{
 				if( TargetPosition == Positions.Num() - 1 )
@@ -56,7 +68,7 @@ void AChasingEntity::Tick(float DeltaTime)
 void AChasingEntity::StartMoving()
 {
 	bShouldMove = true;
-	//LerpSpeed = UParameterSettings::GetParamSettings()->ChasingEntitySpeed;
+	ActiveLerpSpeed = DefaultLerpSpeed;
 	StartMovingEvent();
 }
 

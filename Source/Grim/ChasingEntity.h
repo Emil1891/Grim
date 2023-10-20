@@ -61,11 +61,17 @@ private:
 	UPROPERTY(EditAnywhere)
 	int TargetPosition = 1;
 	
-	UPROPERTY(EditAnywhere)
-	float LerpSpeed = 1;
+	UPROPERTY(BlueprintReadOnly, meta=(AllowPrivateAccess=true))
+	float DefaultLerpSpeed = 1;
+
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
+	float ActiveLerpSpeed = 1;
 
 	UPROPERTY(EditAnywhere)
 	bool bShouldMove = false;
+
+	UPROPERTY(EditAnywhere)
+	float MaxAllowedDistance = 5000;
 	
 	UPROPERTY(EditDefaultsOnly)
 	USoundBase* StartSound;
