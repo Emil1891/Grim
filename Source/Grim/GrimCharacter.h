@@ -87,7 +87,10 @@ public:
 
 private:
 	UPROPERTY()
-	FTransform SpawnTransform;
+	FVector SpawnLocation;
+
+	UPROPERTY()
+	FRotator SpawnRotation;
 
 	UPROPERTY(EditAnywhere)
 	TArray<FName> TagsToCheck {
@@ -124,7 +127,6 @@ public:
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
-
+	
 };
 
