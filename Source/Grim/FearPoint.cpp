@@ -22,9 +22,6 @@ void AFearPoint::BeginPlay()
 
 float AFearPoint::GetFearLevel() const
 {
-	if( !Cast<AGrimCharacter>(Player)->IsDead() ) {
-		return 0;
-	}
 	const float DistToPlayer = FVector::Dist(GetActorLocation(), Player->GetActorLocation());
 
 	// Lower value if the point is behind the player 

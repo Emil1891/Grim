@@ -21,7 +21,7 @@ void AGrimPlayerState::BeginPlay()
 	TArray<AActor*> TempArray; 
 	UGameplayStatics::GetAllActorsOfClass(this, AFearPoint::StaticClass(), TempArray);
 
-	for(auto FearPoint : TempArray)
+	for(const auto FearPoint : TempArray)
 		AllFearPoints.Add(Cast<AFearPoint>(FearPoint));
 
 	// set up the audio component handling fear level and the heartbeat 
@@ -41,13 +41,14 @@ void AGrimPlayerState::BeginPlay()
 void AGrimPlayerState::SetFearLevel()
 {
 	// Finds the highest fear level (nearer to 1 means more fear)
-	float MaxFear = 0;
-
+	
 	if(Player->IsDead())
 	{
 		FearLevel = 0; 
 		return;
 	}
+	
+	float MaxFear = 0;
 	
 	for(auto FearPoint : AllFearPoints)
 	{
@@ -55,6 +56,7 @@ void AGrimPlayerState::SetFearLevel()
 		if(FearPointFearLevel > MaxFear)
 			MaxFear = FearPointFearLevel; 
 	}
+	
 	FearLevel = MaxFear;
 }
 
