@@ -6,6 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY(LogDeath);
@@ -51,7 +52,8 @@ void AGrimCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
-	SpawnTransform = GetActorTransform();
+	SpawnLocation = GetActorLocation();
+	SpawnRotation = GetActorRotation();
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -148,11 +150,14 @@ void AGrimCharacter::Respawn(const float DelayTime)
 		bIsDead = true;
 		SetActorEnableCollision(false);
 		DisableInput(Cast<APlayerController>(GetController()));
+		GetCharacterMovement()->DisableMovement();
 		RespawnTrigger();
 		DelayDelegate.BindLambda([this] {
 			if( bIsDead == true )
 			{
-				SetActorTransform(SpawnTransform);
+				UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetControlRotation(SpawnRotation);
+				SetActorLocation(SpawnLocation);
+				GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 				SetActorEnableCollision(true);
 				EnableInput(Cast<APlayerController>(GetController()));
 				bIsDead = false;
