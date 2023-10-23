@@ -32,7 +32,7 @@ void AGalleryQuestManager::BeginPlay()
 	
 	// Set and play the lure sound
 	FTimerHandle TimerHandleIntro;
-	GetWorldTimerManager().SetTimer(TimerHandleIntro, this, &AGalleryQuestManager::PlayDelayedSound, 17);
+	GetWorldTimerManager().SetTimer(TimerHandleIntro, this, &AGalleryQuestManager::PlayDelayedSound, 19);
 
 	Player = UGameplayStatics::GetPlayerPawn(this, 0);
 
