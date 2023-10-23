@@ -146,9 +146,9 @@ bool UAudioOcclusionComponent::DoLineTrace(TArray<FHitResult>& HitResultsOut, co
 
 void UAudioOcclusionComponent::UpdateAudioComp(UAudioComponent* AudioComp, const float DeltaTime)
 {
-	const TArray<AActor*> ActorsToIgnoreInLineTrace {GetOwner(), AudioComp->GetOwner() }; 
+	const TArray<AActor*> ActorsToIgnoreInLineTrace { GetOwner(), AudioComp->GetOwner() }; 
 	
-	TArray<FHitResult> HitResultsFromPlayer;
+	TArray<FHitResult> HitResultsFromPlayer; 
 	// No blocking objects 
 	if(!DoLineTrace(HitResultsFromPlayer, CameraComp->GetComponentLocation(), AudioComp->GetComponentLocation(), ActorsToIgnoreInLineTrace))
 	{
