@@ -5,6 +5,7 @@
 #include "GrimCharacter.h"
 #include "ParameterSettings.h"
 #include "VectorTypes.h"
+#include "Components/AudioComponent.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -25,17 +26,33 @@ AChasingEntity::AChasingEntity()
 void AChasingEntity::BeginPlay()
 {
 	Super::BeginPlay();
+	SpawnTransform = DeathCollisionBox->GetComponentTransform();
+
+	DefaultLerpSpeed = UParameterSettings::GetParamSettings()->ChasingEntitySpeed;
+	//DefaultLerpSpeed = 200;
 }
 
 void AChasingEntity::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if( Cast<AGrimCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0))->IsDead() ) {
+		Reset();
+	}
+	if(UE::Geometry::Distance(GetActorLocation(), UGameplayStatics::GetPlayerCharacter(GetWorld(),0)->GetActorLocation()) >= MaxAllowedDistance)
+	{
+		ActiveLerpSpeed = DefaultLerpSpeed*2;
+	}
+	else if(UE::Geometry::Distance(GetActorLocation(), UGameplayStatics::GetPlayerCharacter(GetWorld(),0)->GetActorLocation()) < MaxAllowedDistance)
+	{
+		ActiveLerpSpeed = DefaultLerpSpeed;
+	}
+	
 	if( bShouldMove ) {
 		if( Positions.Num() > 0 )
 		{
-			FVector Movement = FMath::VInterpConstantTo(GetActorLocation(), Positions[TargetPosition], DeltaTime, LerpSpeed);
+			FVector Movement = FMath::VInterpConstantTo(GetActorLocation(), Positions[TargetPosition], DeltaTime, ActiveLerpSpeed);
 			SetActorLocation(Movement);
-			//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, FString::SanitizeFloat(LerpSpeed));
+			//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, FString::SanitizeFloat(ActiveLerpSpeed));
 			if( UE::Geometry::Distance(GetActorLocation(), Positions[TargetPosition]) < 5.f )
 			{
 				if( TargetPosition == Positions.Num() - 1 )
@@ -56,7 +73,7 @@ void AChasingEntity::Tick(float DeltaTime)
 void AChasingEntity::StartMoving()
 {
 	bShouldMove = true;
-	//LerpSpeed = UParameterSettings::GetParamSettings()->ChasingEntitySpeed;
+	ActiveLerpSpeed = DefaultLerpSpeed;
 	StartMovingEvent();
 }
 
@@ -73,12 +90,19 @@ void AChasingEntity::OnOverlapDeathBox(
 	{
 		if( OverlappedComp == DeathCollisionBox )
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, TEXT("Death Collision."));
+			//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, TEXT("Death Collision."));
 			UGameplayStatics::SpawnSound2D(this, CombustionSound);
-			Player->Respawn();
+			Player->Respawn(6);
+			Reset();
 		}
-
 	}
+}
+
+void AChasingEntity::Reset() {
+	bShouldMove = false;
+	TargetPosition = 1;
+	DeathCollisionBox->SetRelativeTransform(SpawnTransform);
+	TriggerCollisionBox->SetGenerateOverlapEvents(true);
 }
 
 void AChasingEntity::OnOverlapTriggerBox(
@@ -92,7 +116,7 @@ void AChasingEntity::OnOverlapTriggerBox(
 	//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, TEXT("Start overlap."));
 	if( Cast<AGrimCharacter>(OtherActor) )
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, TEXT("Starting move."));
+		//GEngine->AddOnScreenDebugMessage(-1, 4, FColor::Cyan, TEXT("Starting move."));
 		StartMoving();
 		TriggerCollisionBox->SetGenerateOverlapEvents(false);
 		UGameplayStatics::SpawnSound2D(TriggerCollisionBox, PressurePlateSound);

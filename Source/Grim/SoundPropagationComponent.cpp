@@ -143,8 +143,6 @@ bool USoundPropagationComponent::ActorShouldBeIgnored(const AActor* Actor)
 	return false; 
 }
 
-// TODO: TAKE LENGTH INTO ACCOUNT? IF PATH > LENGTH THEN DONT PROPAGATE SOUND? 
-// TODO: DONT PLAY SOUND AT ALL IF EXCEEDING AN EVEN GREATER LENGTH? FALL OFF DISTANCE PROB HANDLES THAT 
 void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioComp, const float DeltaTime)
 {
 	// const auto StartTime = FDateTime::Now().GetMillisecond(); // FOR DEBUGGING
@@ -184,8 +182,6 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 	// Iterate through path and find the last node with line of sight to player, that's the location to propagate the sound to 
 	for(int i = 1; i < Path.Num(); i++)
 	{
-
-		
 		FHitResult HitResult;
 		DoLineTrace(HitResult, Path[i]->GetWorldCoordinate(), ActorsToIgnore); 
 		
@@ -216,13 +212,12 @@ void USoundPropagationComponent::UpdateSoundPropagation(UAudioComponent* AudioCo
 		
 		break; // Found the node with block so no need to traverse the path any further 
 	}
-
-	for(auto Node : Path)
-	{
-		// Draw the path (only drawn while there is line of sight), TODO: THIS IS ONLY FOR DEBUGGING! REMOVE WHEN DONE! 
-		if(Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass()))->bDrawPath)
-			DrawDebugSphere(GetWorld(), Node->GetWorldCoordinate(), 30, 10, FColor::Red);
-	}
+	
+	// TODO: THIS IS ONLY FOR DEBUGGING! REMOVE WHEN DONE!
+	// Draw the path (only drawn while there is line of sight), 
+	if(Cast<AMapGrid>(UGameplayStatics::GetActorOfClass(this, AMapGrid::StaticClass()))->bDrawPath)
+		for(auto Node : Path)
+			DrawDebugSphere(GetWorld(), Node->GetWorldCoordinate(), 30, 10, FColor::Red); 
 
 	// DEBUGGING 
 	// const auto EndTime = FDateTime::Now().GetMillisecond();
@@ -243,14 +238,13 @@ void USoundPropagationComponent::RemovePropagatedSound(const UAudioComponent* Au
 	// if there is propagated sound in the level 
 	if(PropagatedSounds.Contains(AudioComp))
 	{
-		// TODO: Setting volume to 0 causes weird behaviour in play time, should probably set a value near zero 
+		// Volume is set to near zero because of UE optimizations which would lead to the original audio and the
+		// propagated sound would be out of sync 
 		UAudioComponent* PropAudio = PropagatedSounds[AudioComp]; 
 		const float NewVolume = FMath::FInterpConstantTo(PropAudio->VolumeMultiplier, 0.01f, DeltaTime, PropVolumeLerpSpeed); 
 		PropAudio->SetVolumeMultiplier(NewVolume); // Interpolates volume to zero
 
 		// UE_LOG(LogTemp, Warning, TEXT("Prop vol: %f"), NewVolume)
-
-		//PropagatedSounds.Remove(AudioComp); // And remove it from the map 
 	}
 }
 

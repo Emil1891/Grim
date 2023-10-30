@@ -146,9 +146,9 @@ bool UAudioOcclusionComponent::DoLineTrace(TArray<FHitResult>& HitResultsOut, co
 
 void UAudioOcclusionComponent::UpdateAudioComp(UAudioComponent* AudioComp, const float DeltaTime)
 {
-	const TArray<AActor*> ActorsToIgnoreInLineTrace {GetOwner(), AudioComp->GetOwner() }; 
+	const TArray<AActor*> ActorsToIgnoreInLineTrace { GetOwner(), AudioComp->GetOwner() }; 
 	
-	TArray<FHitResult> HitResultsFromPlayer;
+	TArray<FHitResult> HitResultsFromPlayer; 
 	// No blocking objects 
 	if(!DoLineTrace(HitResultsFromPlayer, CameraComp->GetComponentLocation(), AudioComp->GetComponentLocation(), ActorsToIgnoreInLineTrace))
 	{
@@ -251,12 +251,12 @@ float UAudioOcclusionComponent::GetThicknessValue(const FHitResult& HitResultFro
 void UAudioOcclusionComponent::ResetAudioComponentOnNoBlock(UAudioComponent* AudioComponent)
 {
 	//UE_LOG(LogTemp, Warning, TEXT("Volume: 1, Low Pass: Disabled"))
-
-	// Resets the audio comp values if they are not already reset 
+	
 	if(AudioComponent->VolumeMultiplier != 1)
 		AudioComponent->SetVolumeMultiplier(1);
 
-	if(AudioComponent->bEnableLowPassFilter)
+	// UE seems to not update the low pass filter correctly so if checks are not correct, reset every frame thus needed 
+	// if(AudioComponent->bEnableLowPassFilter)
 		AudioComponent->SetLowPassFilterEnabled(false);
 }
 

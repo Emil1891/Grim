@@ -38,8 +38,7 @@ bool FPathfinder::FindPath(const FVector& From, const FVector& To, TArray<FGridN
 
 	bOutPlayerHasMoved = true; 
 	
-	// TODO: remove if, bad way of forcing path draw each frame by always updating the path (not calculating path
-	// TODO: every frame is bugged as of now) 
+	// TODO: remove if, bad way of forcing path draw each frame by always updating the path 
 	if(!Grid->bDrawPath) 
 		OldEndNode = EndNode; 
 

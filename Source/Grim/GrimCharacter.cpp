@@ -1,14 +1,15 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "GrimCharacter.h"
-#include "GrimProjectile.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+DEFINE_LOG_CATEGORY(LogDeath);
 
 //////////////////////////////////////////////////////////////////////////
 // AGrimCharacter
@@ -52,6 +53,7 @@ void AGrimCharacter::BeginPlay()
 		}
 	}
 	SpawnLocation = GetActorLocation();
+	SpawnRotation = GetActorRotation();
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -122,26 +124,46 @@ bool AGrimCharacter::GetHasRifle()
 	return bHasRifle;
 }
 
-void AGrimCharacter::Respawn()
+void AGrimCharacter::Respawn(const float DelayTime)
 {
 	if( !bIsDead )
 	{
-		SetActorEnableCollision(false);
-		//SetActorLocation(SpawnLocation);
+		UE_LOG(LogDeath, Log, TEXT("Time since map start: %f sec. :: Level: %s :: Died at location: %s"),
+			GetGameTimeSinceCreation(),
+			*UGameplayStatics::GetCurrentLevelName(this),
+			*GetActorLocation().ToString()
+		);
+		FFileHelper::SaveStringToFile(
+			*FString::Printf(
+				TEXT("\nTime since map start: %f sec. :: Level: %s :: Died at location: %s"),
+				GetGameTimeSinceCreation(),
+				*UGameplayStatics::GetCurrentLevelName(this),
+				*GetActorLocation().ToString()
+			),
+			*FPaths::ProjectLogDir().Append(TEXT("DeathLog.txt")),
+			FFileHelper::EEncodingOptions::AutoDetect,
+			&IFileManager::Get(),
+			FILEWRITE_Append
+		);
 		FTimerHandle DelayHandle;
 		FTimerDelegate DelayDelegate;
+		bIsDead = true;
+		SetActorEnableCollision(false);
+		DisableInput(Cast<APlayerController>(GetController()));
+		GetCharacterMovement()->DisableMovement();
+		RespawnTrigger();
 		DelayDelegate.BindLambda([this] {
 			if( bIsDead == true )
 			{
-				UGameplayStatics::OpenLevel(this, FName(UGameplayStatics::GetCurrentLevelName(this)));
+				UGameplayStatics::GetPlayerController(GetWorld(), 0)->SetControlRotation(SpawnRotation);
+				SetActorLocation(SpawnLocation);
+				GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 				SetActorEnableCollision(true);
+				EnableInput(Cast<APlayerController>(GetController()));
+				bIsDead = false;
 			}
 		});
-	
-		DisableInput(Cast<APlayerController>(GetController()));
-		RespawnTrigger();
-		GetWorldTimerManager().SetTimer(DelayHandle, DelayDelegate, 2.f, false);
-		bIsDead = true;
+		GetWorldTimerManager().SetTimer(DelayHandle, DelayDelegate, DelayTime, false);
 	}
 }
 

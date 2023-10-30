@@ -7,6 +7,8 @@
 #include "InputActionValue.h"
 #include "GrimCharacter.generated.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogDeath, Log, All);
+
 class UInputComponent;
 class USkeletalMeshComponent;
 class USceneComponent;
@@ -18,7 +20,7 @@ UCLASS(config=Game)
 class AGrimCharacter : public ACharacter
 {
 	GENERATED_BODY()
-
+	
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
 	USkeletalMeshComponent* Mesh1P;
@@ -67,7 +69,7 @@ public:
 	bool GetHasRifle();
 	
 	UFUNCTION(BlueprintCallable, Category = Respawn)
-    void Respawn();
+    void Respawn(const float DelayTime = 2.f);
     
 	UFUNCTION(BlueprintImplementableEvent)
 	void RespawnTrigger();
@@ -80,11 +82,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetCurrentAudioInstructions(USoundBase* NewAudioInstructions);
 
+	UFUNCTION(BlueprintCallable)
 	bool IsDead() const { return bIsDead; }
 
 private:
 	UPROPERTY()
 	FVector SpawnLocation;
+
+	UPROPERTY()
+	FRotator SpawnRotation;
 
 	UPROPERTY(EditAnywhere)
 	TArray<FName> TagsToCheck {
@@ -121,7 +127,6 @@ public:
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
-
-
+	
 };
 
