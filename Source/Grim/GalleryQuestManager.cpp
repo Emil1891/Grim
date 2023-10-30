@@ -126,7 +126,7 @@ void AGalleryQuestManager::TriggerZoneEntered(UPrimitiveComponent* OverlappedCom
 	
 	AudioPlayer->SetSound(QuestIntroSound);
 	FTimerHandle TimerHandleRepeater;
-	GetWorldTimerManager().SetTimer(TimerHandleRepeater, this, &AGalleryQuestManager::SetQuestIntroFinished, 26);
+	GetWorldTimerManager().SetTimer(TimerHandleRepeater, this, &AGalleryQuestManager::SetQuestIntroFinished, 28);
 	AudioPlayer->Play();
 	OnQuestStarted();
 	bQuestStarted = true; 
